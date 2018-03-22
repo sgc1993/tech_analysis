@@ -23,6 +23,7 @@ public class MatchService {
     public Enterprise getEnterpriseById(int id){
         return enterpriseDao.getEnterpriseById(id);
     }
+
     public List<Enterprise> getList(){
         return enterpriseDao.getList();
     }

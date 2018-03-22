@@ -14,13 +14,12 @@ import java.util.List;
 /**
  * Created by Administrator on 2018/3/21 0021.
  */
-@Controller
+@RestController
 @RequestMapping("/match")
 public class MatchController {
     @Autowired
     private MatchService matchService;
     @RequestMapping("/getEnterprise")
-    @ResponseBody
     public List<Enterprise> getEnterprise(){
         List<Enterprise> list = matchService.getList();
         //System.out.print(list.get(2).getName());
