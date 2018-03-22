@@ -14,7 +14,7 @@ public class TechAnalysisApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(TechAnalysisApplication.class, args);
 	}
-//test
+//dtest
 //	@Autowired
 //	private Environment env;
 //
