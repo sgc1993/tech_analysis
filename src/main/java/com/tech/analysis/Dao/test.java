@@ -9,7 +9,7 @@ public class test {
         System.out.println("test");
         KeywordsDao keywordsDao = new KeywordsDao();
         HashMap<String,ArrayList<Integer>> data = keywordsDao.getData("高精度");
-        String str =keywordsDao.getJsonString(keywordsDao.getCommunity(data));
+        String str =keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
         System.out.println(str);
     }
 }

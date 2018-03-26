@@ -5,11 +5,27 @@ import java.util.*;
 import java.io.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * 该类主要作用是给定查找，返回从neo4j中查找的结果
  */
+@Repository
 public class KeywordsDao {
+//    @Autowired
+//    ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
+
+
+    /**
+     * @param query 给定目标词
+     * @return 目标词社区的字符串
+     */
+    public String getJsonString(String query){
+        KeywordsDao keywordsDao = new KeywordsDao();
+        HashMap<String,ArrayList<Integer>> data = keywordsDao.getData(query);
+        return keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
+    }
 
     /**
      * 根据传入的参数划分社区
@@ -32,12 +48,13 @@ public class KeywordsDao {
         HashMap<String,ArrayList<Integer>> data = new HashMap<String,ArrayList<Integer>>();
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
         StatementResult result;
-        if (query ==null){
+        if (query == null){
             result = connect.excute(
                     "MATCH (n:Keyword) RETURN n.name AS name,n.weight AS weight," +
                             "n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
         }else {
+            System.out.println(query);
             StatementResult result1 = connect.excute(
                     "MATCH (n:Keyword) WHERE n.name = \"" + query +
                             "\" return n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
@@ -62,8 +79,8 @@ public class KeywordsDao {
         {
             ++count;
             Record record = result.next();
-            System.out.println("partitionKey: " + record.get("partitionKey") + " " +
-                    "partitionKey1: " + record.get("partitionKey1"));
+//            System.out.println("partitionKey: " + record.get("partitionKey") + " " +
+//                    "partitionKey1: " + record.get("partitionKey1"));
             try {
                 ArrayList<Integer> templist = new ArrayList<Integer>();
                 templist.add(record.get("partitionKey").asInt());
@@ -134,7 +151,7 @@ public class KeywordsDao {
      *                  （社区id为键,该社区成员的成员社区为键，对应的字符串为值）
      * @return jsonString
      */
-    public String getJsonString(HashMap<Integer,HashMap<Integer,ArrayList<String>>> community){
+    public String formatJsonString(HashMap<Integer,HashMap<Integer,ArrayList<String>>> community){
         JSONObject obj = new JSONObject();
         JSONArray objArray = new JSONArray();
         obj.put("name","community");
@@ -181,7 +198,7 @@ public class KeywordsDao {
             objArray.put(obj1);
         }
         obj.put("children",objArray);
-        System.out.println(obj.toString());
+//        System.out.println(obj.toString());
         boolean flag = createJsonFile(obj.toString(),"E:\\communitydata","Communityjson1");
         System.out.println(flag);
         return obj.toString();
