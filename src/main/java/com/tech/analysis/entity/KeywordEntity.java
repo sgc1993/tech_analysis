@@ -4,7 +4,6 @@ import java.io.Serializable;
  * Created by XCY on 2018/3/26.
  */
 public class KeywordEntity implements Serializable {
-
     private static final long serialVersionUID = 1269373329410167403l;
     private String name;
     private Long id;
