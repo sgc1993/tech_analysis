@@ -43,13 +43,14 @@ public class KeywordsDao {
         HashMap<String,ArrayList<Integer>> data = new HashMap<String,ArrayList<Integer>>();
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
         StatementResult result;
-        if (query == null){
+        System.out.println(query.length());
+        if (query.equals("\"\"")){
             result = connect.excute(
                     "MATCH (n:Keyword) RETURN n.name AS name,n.weight AS weight," +
                             "n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
         }else {
-            System.out.println(query);
+            System.out.println("else: "+ query);
             StatementResult result1 = connect.excute(
                     "MATCH (n:Keyword) WHERE n.name = \"" + query +
                             "\" return n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
