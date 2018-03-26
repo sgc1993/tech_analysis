@@ -13,10 +13,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class KeywordsDao {
-//    @Autowired
-//    ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
-
-
     /**
      * @param query 给定目标词
      * @return 目标词社区的字符串
@@ -33,7 +29,6 @@ public class KeywordsDao {
      */
     public void partitionCommunity(String partitionKey){
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
-//        Session session = connect.getSession();
         String order = "CALL apoc.algo.community(25,['Keyword'],'partitionKey','similar','OUTGOING','"+partitionKey+"',10000)";
         connect.excute(order,parameters( "", "" ));
         connect.closeConnect();
