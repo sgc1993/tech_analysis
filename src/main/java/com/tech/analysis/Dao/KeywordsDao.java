@@ -5,11 +5,23 @@ import java.util.*;
 import java.io.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 
 /**
  * 该类主要作用是给定查找，返回从neo4j中查找的结果
  */
+@Repository
 public class KeywordsDao {
+    /**
+     * @param query 给定目标词
+     * @return 目标词社区的字符串
+     */
+    public String getJsonString(String query){
+        KeywordsDao keywordsDao = new KeywordsDao();
+        HashMap<String,ArrayList<Integer>> data = keywordsDao.getData(query);
+        return keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
+    }
 
     /**
      * 根据传入的参数划分社区
@@ -17,7 +29,6 @@ public class KeywordsDao {
      */
     public void partitionCommunity(String partitionKey){
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
-//        Session session = connect.getSession();
         String order = "CALL apoc.algo.community(25,['Keyword'],'partitionKey','similar','OUTGOING','"+partitionKey+"',10000)";
         connect.excute(order,parameters( "", "" ));
         connect.closeConnect();
@@ -32,12 +43,14 @@ public class KeywordsDao {
         HashMap<String,ArrayList<Integer>> data = new HashMap<String,ArrayList<Integer>>();
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
         StatementResult result;
-        if (query ==null){
+        System.out.println(query.length());
+        if (query.equals("\"\"")){
             result = connect.excute(
                     "MATCH (n:Keyword) RETURN n.name AS name,n.weight AS weight," +
                             "n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
         }else {
+            System.out.println("else: "+ query);
             StatementResult result1 = connect.excute(
                     "MATCH (n:Keyword) WHERE n.name = \"" + query +
                             "\" return n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
@@ -62,8 +75,8 @@ public class KeywordsDao {
         {
             ++count;
             Record record = result.next();
-            System.out.println("partitionKey: " + record.get("partitionKey") + " " +
-                    "partitionKey1: " + record.get("partitionKey1"));
+//            System.out.println("partitionKey: " + record.get("partitionKey") + " " +
+//                    "partitionKey1: " + record.get("partitionKey1"));
             try {
                 ArrayList<Integer> templist = new ArrayList<Integer>();
                 templist.add(record.get("partitionKey").asInt());
@@ -134,7 +147,7 @@ public class KeywordsDao {
      *                  （社区id为键,该社区成员的成员社区为键，对应的字符串为值）
      * @return jsonString
      */
-    public String getJsonString(HashMap<Integer,HashMap<Integer,ArrayList<String>>> community){
+    public String formatJsonString(HashMap<Integer,HashMap<Integer,ArrayList<String>>> community){
         JSONObject obj = new JSONObject();
         JSONArray objArray = new JSONArray();
         obj.put("name","community");
@@ -181,44 +194,44 @@ public class KeywordsDao {
             objArray.put(obj1);
         }
         obj.put("children",objArray);
-        System.out.println(obj.toString());
-        boolean flag = createJsonFile(obj.toString(),"E:\\communitydata","Communityjson1");
-        System.out.println(flag);
+//        System.out.println(obj.toString());
+//        boolean flag = createJsonFile(obj.toString(),"E:\\communitydata","Communityjson1");
+//        System.out.println(flag);
         return obj.toString();
     }
 
 
-    public boolean createJsonFile(String jsonString, String filePath, String fileName) {
-        // 标记文件生成是否成功
-        boolean flag = true;
-
-        // 拼接文件完整路径
-        String fullPath = filePath + File.separator + fileName + ".json";
-
-        // 生成json格式文件
-        try {
-            // 保证创建一个新文件
-            File file = new File(fullPath);
-            if (!file.getParentFile().exists()) { // 如果父目录不存在，创建父目录
-                file.getParentFile().mkdirs();
-            }
-            if (file.exists()) { // 如果已存在,删除旧文件
-                file.delete();
-            }
-            file.createNewFile();
-
-
-            // 将格式化后的字符串写入文件
-            Writer write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
-            write.write(jsonString);
-            write.flush();
-            write.close();
-        } catch (Exception e) {
-            flag = false;
-            e.printStackTrace();
-        }
-
-        // 返回是否成功的标记
-        return flag;
-    }
+//    public boolean createJsonFile(String jsonString, String filePath, String fileName) {
+//        // 标记文件生成是否成功
+//        boolean flag = true;
+//
+//        // 拼接文件完整路径
+//        String fullPath = filePath + File.separator + fileName + ".json";
+//
+//        // 生成json格式文件
+//        try {
+//            // 保证创建一个新文件
+//            File file = new File(fullPath);
+//            if (!file.getParentFile().exists()) { // 如果父目录不存在，创建父目录
+//                file.getParentFile().mkdirs();
+//            }
+//            if (file.exists()) { // 如果已存在,删除旧文件
+//                file.delete();
+//            }
+//            file.createNewFile();
+//
+//
+//            // 将格式化后的字符串写入文件
+//            Writer write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+//            write.write(jsonString);
+//            write.flush();
+//            write.close();
+//        } catch (Exception e) {
+//            flag = false;
+//            e.printStackTrace();
+//        }
+//
+//        // 返回是否成功的标记
+//        return flag;
+//    }
 }
