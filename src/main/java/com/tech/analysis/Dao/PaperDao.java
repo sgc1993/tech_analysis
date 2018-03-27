@@ -94,4 +94,16 @@ public class PaperDao {
     public void deleteItemInAddressTempByOrganization(String organization){
         jdbcTemplate.update(String.format("delete from AddressTemp where organization = '%s'",organization));
     }
+
+    public List<String> getAddressTempNames(){
+        String sql = "select organization from AddressTemp";
+        List<String> names = jdbcTemplate.query(sql, new RowMapper<String>(){
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String name = rs.getString("organization");
+                return name;
+            }
+        });
+        return names;
+    }
 }
