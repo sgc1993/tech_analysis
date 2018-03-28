@@ -2,6 +2,7 @@ package com.tech.analysis.service;
 
 import com.sun.xml.internal.bind.v2.runtime.output.Encoded;
 import com.tech.analysis.Dao.EnterpriseDao;
+import com.tech.analysis.Dao.MatchDao;
 import com.tech.analysis.Dao.PaperDao;
 import com.tech.analysis.entity.AddressTemp;
 import com.tech.analysis.entity.Enterprise;
@@ -28,6 +29,8 @@ public class MatchService {
     private EnterpriseDao enterpriseDao;
     @Autowired
     private PaperDao paperDao;
+    @Autowired
+    private MatchDao matchDao;
     @Autowired
     private MatchUtil matchUtil;
 
@@ -143,6 +146,9 @@ public class MatchService {
         //5、向CompanyAlias中插入企业别名和对应companyid
         enterpriseDao.updateCompanyAlias(companyId,aliasName);
         //注意他的数据库里id字段不是自增的
+        //往匹配记录表MatchRecord里记录匹配数据，以备后序撤销匹配操作
+        matchDao.updateMatchRecord(companyId,aliasName,"paper");
+
     }
 
 
@@ -164,5 +170,32 @@ public class MatchService {
             names = paperDao.getAddressTempNames();
         }
         return names;
+    }
+
+    /**
+     * @param companyId 对曾今插入过的数据进行回滚
+     * @param aliasName
+     * @param source
+     */
+    public void rollbackMatch(int companyId,String aliasName,String source){
+        if(source.equals("paper")){
+            //可能这个机构对应的多条论文都被错插了，所以aliasName，companyId在Address中可能会匹配到多条一致的AddressTemp需要插入
+            //1、从Address中获取对应的AddressTemp数据
+            List<AddressTemp> addressTemps = paperDao.getAddressTempsInAddress(companyId,aliasName);
+            //2、将获取到的数据逐条插入到Temp表中
+            updateAddressTemp(addressTemps);
+            //3、将Address对应的原有的数据删除
+            paperDao.deleteItemByCompanyIdAndAliasname("Address",companyId,aliasName);
+            //4、将CompanyAlias中的对应数据删除
+            matchDao.deleteItemByCompanyIdAndAliasname("CompanyAlias",companyId,aliasName);
+            //5、MatchRecord表中去除该匹配记录
+            matchDao.deleteItemByCompanyIdAndAliasname("MatchRecord",companyId,aliasName);
+        }
+    }
+
+    public void updateAddressTemp(List<AddressTemp> addressTemps){
+        for (AddressTemp addressTemp : addressTemps) {
+            paperDao.updateAddressTemp(addressTemp);
+        }
     }
 }

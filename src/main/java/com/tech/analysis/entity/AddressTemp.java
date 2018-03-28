@@ -12,7 +12,7 @@ public class AddressTemp {
     private String city;
     private String country;
     private String zip;
-    private int addr_no;
+    private String addr_no;
 
     public String getUid() {
         return uid;
@@ -70,11 +70,11 @@ public class AddressTemp {
         this.zip = zip;
     }
 
-    public int getAddr_no() {
+    public String getAddr_no() {
         return addr_no;
     }
 
-    public void setAddr_no(int addr_no) {
+    public void setAddr_no(String addr_no) {
         this.addr_no = addr_no;
     }
 
@@ -90,5 +90,31 @@ public class AddressTemp {
                 ", zip='" + zip + '\'' +
                 ", addr_no=" + addr_no +
                 '}';
+    }
+
+    public String getInsertSql(){
+
+        String sql = "Insert into AddressTemp (";
+        if(uid!=null)sql += "uid,";
+        if(organization!=null)sql +="organization,";
+        if(suborganization!=null)sql +="suborganization,";
+        if(full_address!=null)sql +="full_address,";
+        if(city!=null)sql +="city,";
+        if(country!=null)sql +="country,";
+        if(zip!=null)sql +="zip,";
+        if(addr_no!=null)sql +="addr_no,";
+        sql = sql.substring(0,sql.length()-1);
+        sql += ") values(";
+        if(uid!=null)sql = sql + "'" + uid +"',";
+        if(organization!=null)sql = sql + "'" + organization +"',";
+        if(suborganization!=null)sql = sql + "'" + suborganization +"',";
+        if(full_address!=null)sql = sql + "'" + full_address +"',";
+        if(city!=null)sql = sql + "'" + city +"',";
+        if(country!=null)sql = sql + "'" + country +"',";
+        if(zip!=null)sql = sql + "'" + zip +"',";
+        if(addr_no!=null)sql = sql + "'" + addr_no +"',";
+        sql = sql.substring(0,sql.length()-1);
+        sql += ")";
+        return sql;
     }
 }

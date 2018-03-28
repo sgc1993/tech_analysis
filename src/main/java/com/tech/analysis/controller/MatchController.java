@@ -75,4 +75,16 @@ public class MatchController {
         return names;
     }
 
+    /**
+     * @param aliasName  回退人工匹配
+     * @param source
+     * @param id
+     * @return
+     */
+    @RequestMapping("/rollbackMatch")
+    public String rollbackMatch(@RequestParam String aliasName,@RequestParam String source,@RequestParam String id){
+        int companyId = Integer.parseInt(id);
+        matchService.rollbackMatch(companyId,aliasName,source);
+        return "success";
+    }
 }
