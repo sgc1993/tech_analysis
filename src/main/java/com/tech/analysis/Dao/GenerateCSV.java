@@ -24,21 +24,40 @@ public class GenerateCSV {
     }
     private long nodeId = 0l;
     private long relationshipId = 0l;
+    private long count = 0;
+
+    /**
+     * 返回关键字列表
+     * @param line 读入的一行数据
+     * @return
+     */
     public List<String> getKeyWords(String line){//获取关键字列表
         List<String> keywords = new ArrayList<String>();
-        String[] strings = line.trim().split(",");
-        if (strings.length > 1){
-            for (int i = 1; i < strings.length; i++){
-                if (strings[i].trim().length() < 2)
+        String[] strings = line.trim().split("!");
+        if (strings.length > 2){
+            for (int i = 2; i < strings.length; i++){
+                if (strings[i].trim().length() < 2){
                     continue;
+                }
                 keywords.add(strings[i].trim().replace("\""," "));
             }
         }
         return keywords;
     }
+
+    /**
+     * 返回带年份的关键字列表
+     * @param line 读入数据
+     * @return
+     */
     public List<String> getYearKeyWords(String line){//获取关键字列表
         List<String> keywords = new ArrayList<String>();
-        String[] strings = line.trim().split(",");
+        String[] strings = line.trim().split("!");
+        if (strings.length<=2 || strings[1].trim().length() != 4){
+            ++count;
+            System.out.println("error data: " + line + strings.length);
+            return  keywords;
+        }
         if (strings.length > 2){
             for (int i = 2; i < strings.length; i++){
                 if (strings[i].trim().length() < 2)
@@ -49,6 +68,10 @@ public class GenerateCSV {
         return keywords;
     }
 
+    /**
+     * 给定文件名，将该文件写成CSV文件供写入neo4j使用
+     * @param file 文件名
+     */
     public void generate(String file) {
         try {
             //存储不带年份的keywordTimes
@@ -74,11 +97,13 @@ public class GenerateCSV {
 
                 //获取keyword实体
                 List<String> getKeywords = getKeyWords(line);
+                System.out.println("keyword:   "+getKeywords);
                 List<Long> keywordIdList = new ArrayList<Long>();
                 addLineKeyWords(keywords,keywordTimes,getKeywords,keywordIdList);
                 addLineRelationship(relationships,keywordIdList);
 
                 List<String> getYearKeywords = getYearKeyWords(line);
+                System.out.println("getYearKeywords:   "+getYearKeywords);
                 List<Long> yearKeywordIdList = new ArrayList<Long>();
                 addLineKeyWords(yearKeywords,yearKeywordTimes,getYearKeywords,yearKeywordIdList);
                 addLineRelationship(yearRelationships,yearKeywordIdList);
@@ -93,10 +118,11 @@ public class GenerateCSV {
             //写入文件中
             boolean flagkeywords = writeKeywordsCSV(keywords,"E:\\tech_analysis","keywords");
             boolean flagrelationship = writeRelationshipCSV(relationships,"E:\\tech_analysis","relationship");
-            boolean flagyearKeywords = writeKeywordsCSV(yearKeywords,"E:\\tech_analysis","yearKeywords");
-            boolean flagyearRelationship = writeRelationshipCSV(yearRelationships,"E:\\tech_analysis","yearRelationship");
+            boolean flagyearKeywords = writeYearKeywordsCSV(yearKeywords,"E:\\tech_analysis","yearKeywords");
+            boolean flagyearRelationship = writeYearRelationshipCSV(yearRelationships,"E:\\tech_analysis","yearRelationship");
             System.out.println(flagkeywords);
             System.out.println(flagrelationship);
+            System.out.println("errorline: "+count);
             System.out.println(flagyearKeywords);
             System.out.println(flagyearRelationship);
         } catch (IOException e) {
@@ -104,6 +130,13 @@ public class GenerateCSV {
         }
     }
 
+    /**
+     * 将改行关键字加入keywords
+     * @param keywords
+     * @param keywordTimes
+     * @param getKeywords
+     * @param keywordIdList
+     */
     public void addLineKeyWords(HashMap<String, KeywordEntity> keywords,
                                 HashMap<String, Long> keywordTimes,
                                 List<String> getKeywords,
@@ -128,6 +161,11 @@ public class GenerateCSV {
         }
     }
 
+    /**
+     * 将该行的共现关系加入relationships
+     * @param relationships
+     * @param keywordIdList
+     */
     public void addLineRelationship(HashMap<String, RelationshipEntity> relationships,
                                     List<Long> keywordIdList){
         for (int i = 0; i < keywordIdList.size(); i++) {
@@ -152,7 +190,7 @@ public class GenerateCSV {
 
     /**
      * 将keywords写入CSV
-     * 每一行存入    id,name
+     * 每一行存入    label,id,name
      * @param keywords 需要写入的map
      * @param filePath 写入的路径
      * @param fileName 写入文件的名字
@@ -163,7 +201,7 @@ public class GenerateCSV {
         boolean flag = true;
 
         //文件总行数
-        long count = 0;
+        long countline = 0;
 
         // 拼接文件完整路径
         String fullPath = filePath + File.separator + fileName + ".csv";
@@ -182,15 +220,15 @@ public class GenerateCSV {
 
 
             // 将格式化后的字符串写入文件
-            Writer write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
-            write.write("id,name\n");
+            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
+            write.write("l:label\tid:string:KeywordId\tname\n");
             for (String str : keywords.keySet()){
 //                if (keywords.get(str).getName().length() < 3)
 //                    continue;
-                String temp = keywords.get(str).getId()+","+keywords.get(str).getName();
+                String temp = "newKeyword\t"+keywords.get(str).getId()+"\t"+keywords.get(str).getName();
                 write.write(temp);
                 write.write('\n');
-                ++count;
+                ++countline;
             }
             write.flush();
             write.close();
@@ -199,15 +237,70 @@ public class GenerateCSV {
             System.out.println("keywords write error1 !");
             e.printStackTrace();
         }
-        System.out.println(count);
+        System.out.println(countline);
+        // 返回是否成功的标记
+        return flag;
+    }
+
+    /**
+     * 将keywords写入CSV
+     * 每一行存入    label,id,name,year
+     * @param yearkeywords 需要写入的map
+     * @param filePath 写入的路径
+     * @param fileName 写入文件的名字
+     * @return 是否写入成功
+     */
+    private boolean writeYearKeywordsCSV(HashMap<String, KeywordEntity> yearkeywords, String filePath, String fileName) {
+        // 标记文件生成是否成功
+        boolean flag = true;
+
+        //文件总行数
+        long countyear = 0;
+
+        // 拼接文件完整路径
+        String fullPath = filePath + File.separator + fileName + ".csv";
+
+        // 生成csv格式文件
+        try {
+            // 保证创建一个新文件
+            File file = new File(fullPath);
+            if (!file.getParentFile().exists()) { // 如果父目录不存在，创建父目录
+                file.getParentFile().mkdirs();
+            }
+            if (file.exists()) { // 如果已存在,删除旧文件
+                file.delete();
+            }
+            file.createNewFile();
+
+
+            // 将格式化后的字符串写入文件
+            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
+            write.write("l:label\tid:string:yearKeywordId\tname\tyear\n");
+            for (String str : yearkeywords.keySet()){
+                KeywordEntity key = yearkeywords.get(str);
+                String year = key.getName().substring(key.getName().length()-4,
+                        key.getName().length());
+                String temp = "yearNewKeyword\t"+key.getId()+"\t"+key.getName()+"\t"+year;
+                write.write(temp);
+                write.write('\n');
+                ++countyear;
+            }
+            write.flush();
+            write.close();
+        } catch (IOException e) {
+            flag = false;
+            System.out.println("keywords write error1 !");
+            e.printStackTrace();
+        }
+        System.out.println(countyear);
         // 返回是否成功的标记
         return flag;
     }
 
 
     /**
-     *
-     * from_id,times,to_id
+     *将关系写入CSV
+     * id:string:KeywordId	id:string:KeywordId	type	times
      * @param relationships
      * @param filePath
      * @param fileName
@@ -219,7 +312,7 @@ public class GenerateCSV {
         boolean flag = true;
 
         //文件总行数
-        long count = 0;
+        long countre = 0;
 
         // 拼接文件完整路径
         String fullPath = filePath + File.separator + fileName + ".csv";
@@ -236,17 +329,17 @@ public class GenerateCSV {
             }
             file.createNewFile();
             // 将格式化后的字符串写入文件
-            Writer write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
-            write.write("from_id,times,to_id\n");
+            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
+            write.write("id:string:KeywordId\tid:string:KeywordId\ttype\ttimes\n");
             for (String str : relationships.keySet()){
 //                if (relationships.get(str))
 //                    continue;
-                String temp = relationships.get(str).getSource()+","+
-                                relationships.get(str).getTimes()+","+
-                                relationships.get(str).getTarget();
+                String temp = relationships.get(str).getSource()+"\t"+
+                                relationships.get(str).getTarget()+"\t"+"similar\t"+
+                                relationships.get(str).getTimes();
                 write.write(temp);
                 write.write('\n');
-                ++count;
+                ++countre;
             }
             write.flush();
             write.close();
@@ -255,7 +348,60 @@ public class GenerateCSV {
             System.out.println("relationship write error !");
             e.printStackTrace();
         }
-        System.out.println(count);
+        System.out.println(countre);
+        // 返回是否成功的标记
+        return flag;
+    }
+
+    /**
+     *将关系写入CSV
+     * id:string:yearKeywordId	id:string:yearKeywordId	type	times
+     * @param relationships
+     * @param filePath
+     * @param fileName
+     * @return
+     */
+    private boolean writeYearRelationshipCSV(HashMap<String, RelationshipEntity> relationships,
+                                         String filePath, String fileName){
+        // 标记文件生成是否成功
+        boolean flag = true;
+
+        //文件总行数
+        long countreyear = 0;
+
+        // 拼接文件完整路径
+        String fullPath = filePath + File.separator + fileName + ".csv";
+
+        // 生成csv格式文件
+        try {
+            // 保证创建一个新文件
+            File file = new File(fullPath);
+            if (!file.getParentFile().exists()) { // 如果父目录不存在，创建父目录
+                file.getParentFile().mkdirs();
+            }
+            if (file.exists()) { // 如果已存在,删除旧文件
+                file.delete();
+            }
+            file.createNewFile();
+            // 将格式化后的字符串写入文件
+            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
+            write.write("id:string:yearKeywordId\tid:string:yearKeywordId\ttype\ttimes\n");
+            for (String str : relationships.keySet()){
+                String temp = relationships.get(str).getSource()+"\t"+
+                            relationships.get(str).getTarget()+"\t"+"yearSimilar\t"+
+                            relationships.get(str).getTimes()+'\n';
+                write.write(temp);
+//                write.write('\n');
+                ++countreyear;
+            }
+            write.flush();
+            write.close();
+        }catch (IOException e){
+            flag = false;
+            System.out.println("relationship write error !");
+            e.printStackTrace();
+        }
+        System.out.println(countreyear);
         // 返回是否成功的标记
         return flag;
     }

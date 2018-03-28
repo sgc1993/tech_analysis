@@ -25,6 +25,12 @@ public class ConnectAndOperNeo4j {
         driver.close();
     }
 
+    /**
+     * 执行neo4j命令
+     * @param order
+     * @param value
+     * @return
+     */
     public StatementResult excute(String order, Value value){
         StatementResult result = null;
         try {
