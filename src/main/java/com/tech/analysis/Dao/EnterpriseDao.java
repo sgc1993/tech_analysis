@@ -31,7 +31,7 @@ public class EnterpriseDao {
     }
 
     public List<Enterprise> getAllEnterpriseList(){
-        String sql = "SELECT name,chuziqiye,zhuceziben,hangye,zhuceriqi,code,type,zuzhixingshi,level,zhucedi FROM EnterpriseInfo";
+        String sql = "SELECT name,chuziqiye,zhuceziben,hangye,zhuceriqi,code,type,zuzhixingshi,level,zhucedi,id FROM EnterpriseInfo";
         List<Enterprise> list =  (List<Enterprise>) jdbcTemplate.query(sql, new RowMapper<Enterprise>(){
 
             @Override
@@ -47,6 +47,7 @@ public class EnterpriseDao {
                 enterprise.setZuzhixingshi(rs.getString("zuzhixingshi"));
                 enterprise.setLevel(rs.getString("level"));
                 enterprise.setZhucedi(rs.getString("zhucedi"));
+                enterprise.setId(rs.getString("id"));
 
                 return enterprise;
             }

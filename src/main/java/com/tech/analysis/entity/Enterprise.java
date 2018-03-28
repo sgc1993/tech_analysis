@@ -18,6 +18,7 @@ public class Enterprise {
     private String zuzhixingshi;
     private String level;
     private String zhucedi;
+    private String id;
 
     public String getName() {
         return name;
@@ -97,6 +98,14 @@ public class Enterprise {
 
     public void setZhucedi(String zhucedi) {
         this.zhucedi = zhucedi;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Override

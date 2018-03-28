@@ -111,19 +111,31 @@ public class MatchService {
         return enterprise;
     }
 
-    /**
-     * @param enterprise 根据前端选择的企业名称和对应企业信息，更新数据库表内容，匹配机构别名
-     * @param aliasName AddressTemp 表中的organization名
-     */
-    public void updatePaper(Enterprise enterprise,String aliasName){
+//    /**
+//     * @param enterprise 根据前端选择的企业名称和对应企业信息，更新数据库表内容，匹配机构别名
+//     * @param aliasName AddressTemp 表中的organization名
+//     */
+//    public void updatePaper(Enterprise enterprise,String aliasName){
+//        //1、根据organization==aliasName去AddressTemp表中匹配出该机构的所有论文List<Address>
+//        List<AddressTemp> addressTemps = paperDao.getAddressTempsByName(aliasName);
+//        //2、根据选中的企业实体enterprise去EnterpriseInfo中匹配得到companyid
+//        int companyId = enterpriseDao.getCompanyIdByEnterprise(enterprise);
+//        for (AddressTemp a:addressTemps
+//                ) {
+//            System.out.print(a);
+//        }
+//        //3、将AddressTemp和companyid插入Address表中
+//        updateAddress(companyId,addressTemps);
+//        //4、将AddressTemp中对应aliasName记录删除
+//        paperDao.deleteItemInAddressTempByOrganization(aliasName);
+//        //5、向CompanyAlias中插入企业别名和对应companyid
+//        enterpriseDao.updateCompanyAlias(companyId,aliasName);
+//        //注意他的数据库里id字段不是自增的
+//    }
+
+    public void updatePaper(int companyId,String aliasName){
         //1、根据organization==aliasName去AddressTemp表中匹配出该机构的所有论文List<Address>
         List<AddressTemp> addressTemps = paperDao.getAddressTempsByName(aliasName);
-        //2、根据选中的企业实体enterprise去EnterpriseInfo中匹配得到companyid
-        int companyId = enterpriseDao.getCompanyIdByEnterprise(enterprise);
-        for (AddressTemp a:addressTemps
-                ) {
-            System.out.print(a);
-        }
         //3、将AddressTemp和companyid插入Address表中
         updateAddress(companyId,addressTemps);
         //4、将AddressTemp中对应aliasName记录删除
@@ -132,6 +144,7 @@ public class MatchService {
         enterpriseDao.updateCompanyAlias(companyId,aliasName);
         //注意他的数据库里id字段不是自增的
     }
+
 
     /**
      * @param companyId 对选出来的数据进行插入
@@ -145,4 +158,11 @@ public class MatchService {
         }
     }
 
+    public List<String> getWaitForMatch(String source){
+        List<String> names = new ArrayList<>();
+        if(source.equals("paper")){
+            names = paperDao.getAddressTempNames();
+        }
+        return names;
+    }
 }
