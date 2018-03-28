@@ -29,10 +29,15 @@ public class KeywordsController {
         return keywordsService.getTargetDependKeywords(target);
     }
 
-    @RequestMapping("/listKeywords")//年份
+    @RequestMapping("/yearKeywords")//年份
     //得到精确查找字符串
-    public String[] getKeywordsList(){
-//        String[] ans = null;
-        return  null;
+    public List<String> getKeywordsList(){
+        List<String> ans = keywordsService.getYearGraph();
+        return  ans;
+    }
+    @RequestMapping("/predict")
+    //得到预测结果
+    public String predict(){
+        return null;
     }
 }
