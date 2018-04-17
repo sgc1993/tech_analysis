@@ -2,6 +2,8 @@ package com.tech.analysis.controller;
 
 import com.tech.analysis.entity.Enterprise;
 import com.tech.analysis.service.MatchService;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Created by Administrator on 2018/3/21 0021.
  */
@@ -18,6 +21,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/match")
 public class MatchController {
+
+    private Logger logger = LoggerFactory.getLogger("sgc");
+
     @Autowired
     private MatchService matchService;
 //    @RequestMapping("/getEnterprise")
@@ -29,12 +35,19 @@ public class MatchController {
 //        }
 //        return  list;
 //    }
+
+    @RequestMapping("/testLog") //提供路由信息，”/“路径的HTTP Request都会被映射到sayHello方法进行处理。
+    public String sayHello(){
+
+        logger.info("This is an info message,test SUCCESS");
+
+        return "Hello,World!";
+    }
+
     @RequestMapping("/getEnterprise")
     public List<Enterprise> getEnterprise(@RequestParam String aliasName,@RequestParam String source){
         List<Enterprise> list = new ArrayList<>();
-        if(source.equals("paper")){
-            list = matchService.getEnterpriseListOfSimilarName(aliasName);
-        }
+        list = matchService.getEnterpriseListOfSimilarName(aliasName,source);
         return  list;
     }
 //    @RequestMapping("/update")
@@ -60,6 +73,8 @@ public class MatchController {
             //根据机构名去temp表中查该机构发表的论文（可能多篇）,
             // 将该机构发的论文对应到Address表中，将该机构名和对应id存入别名中
             matchService.updatePaper(companyId,aliasName);
+        }else if(source.equals("patent")){
+            matchService.updatePatent(companyId,aliasName);
         }
         return "success";
     }
@@ -87,4 +102,14 @@ public class MatchController {
         matchService.rollbackMatch(companyId,aliasName,source);
         return "success";
     }
+
+    /**
+     * @return  从数据表中抽出待匹配专利机构表
+     */
+    @RequestMapping("/getPatentForMatchToTable")
+    public String getPatentForMatchToTable(){
+        matchService.getPatentForMatchToTable();
+        return "success";
+    }
+
 }

@@ -123,6 +123,18 @@ public class MatchUtil {
         return enterpriseName;
     }
 
+    public boolean isEqualNumber(String name1,String name2){
+        int index1 = name1.indexOf("十");
+        int index2 = name2.indexOf("十");
+        String a = "";
+        String b = "";
+        if(index1!=-1 && index2!=-1){
+            a = String.valueOf(name1.charAt(index1+1));
+            b = String.valueOf(name2.charAt(index2+1));
+            return a.equals(b);
+        }
+        return true;
+    }
 
     /**
      * @param enterpriseName 执行到这里时，一定是中文的机构名
@@ -135,6 +147,8 @@ public class MatchUtil {
         for (Enterprise enterprise: enterpriseList) {
             //对每个企业，与给定企业名称进行匹配
             //可以进行一些粗加工，把字符串转换一下，使得匹配更精准
+            if(!isEqualNumber(enterpriseName,enterprise.getName()))
+                continue;
             String clearotherName = clearEnterpriseName(enterprise.getName());
             String clearName = clearEnterpriseName(enterpriseName);
             if(editDistance(clearName,clearotherName)<4&&longestCommonSubsequence(clearName,clearotherName)>=5)

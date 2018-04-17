@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -154,4 +155,6 @@ public class PaperDao {
     public void deleteItemByCompanyIdAndAliasname(String table,int companyid,String aliasName){
         jdbcTemplate.update(String.format("delete from %s where companyid = %d and organization = '%s'",table,companyid,aliasName));
     }
+
+
 }

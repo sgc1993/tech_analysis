@@ -4,20 +4,20 @@ import com.sun.xml.internal.bind.v2.runtime.output.Encoded;
 import com.tech.analysis.Dao.EnterpriseDao;
 import com.tech.analysis.Dao.MatchDao;
 import com.tech.analysis.Dao.PaperDao;
+import com.tech.analysis.Dao.PatentDao;
 import com.tech.analysis.entity.AddressTemp;
 import com.tech.analysis.entity.Enterprise;
+import com.tech.analysis.entity.PatentIdAndEnterpriseNames;
 import com.tech.analysis.util.MatchUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Administrator on 2018/3/21 0021.
@@ -32,22 +32,16 @@ public class MatchService {
     @Autowired
     private MatchDao matchDao;
     @Autowired
+    private PatentDao patentDao;
+    @Autowired
     private MatchUtil matchUtil;
-
-    /**
-     * @param id 根据一个id获取对应企业实体
-     * @return
-     */
-    public Enterprise getEnterpriseById(int id){
-        return enterpriseDao.getEnterpriseById(id);
-    }
 
 
     /**
      * @param enterpriseName 根据一个企业名称，获取和其可能对应的机构信息
      * @return 企业实体列表
      */
-    public List<Enterprise> getEnterpriseListOfSimilarName(String enterpriseName){
+    public List<Enterprise> getEnterpriseListOfSimilarName(String enterpriseName,String source){
 
         List<Enterprise> list = new ArrayList<>();
         //获得所有企业实体
@@ -56,7 +50,7 @@ public class MatchService {
         if(matchUtil.isChinese(enterpriseName)){
             //将所有企业列表和该企业名传进去，返回所有和该企业名相似的企业列表
             list = matchUtil.getSimEnterpriseList(enterpriseName,enterpriseList);
-        }else{//机构名是英语的情况
+        }else if(source.equals("paper")){//机构名是英语的情况,一般出现在paper中
             //创建一个队列，用于存放该英文机构对应的可能中文机构
             List<String> maybeChineseNameList = new ArrayList<>();
             //在temp表中获取该英文机构的UID（可能不止一个，取一个即可包含）
@@ -135,7 +129,7 @@ public class MatchService {
 //        enterpriseDao.updateCompanyAlias(companyId,aliasName);
 //        //注意他的数据库里id字段不是自增的
 //    }
-
+    @Transactional
     public void updatePaper(int companyId,String aliasName){
         //1、根据organization==aliasName去AddressTemp表中匹配出该机构的所有论文List<Address>
         List<AddressTemp> addressTemps = paperDao.getAddressTempsByName(aliasName);
@@ -148,9 +142,7 @@ public class MatchService {
         //注意他的数据库里id字段不是自增的
         //往匹配记录表MatchRecord里记录匹配数据，以备后序撤销匹配操作
         matchDao.updateMatchRecord(companyId,aliasName,"paper");
-
     }
-
 
     /**
      * @param companyId 对选出来的数据进行插入
@@ -177,6 +169,7 @@ public class MatchService {
      * @param aliasName
      * @param source
      */
+    @Transactional
     public void rollbackMatch(int companyId,String aliasName,String source){
         if(source.equals("paper")){
             //可能这个机构对应的多条论文都被错插了，所以aliasName，companyId在Address中可能会匹配到多条一致的AddressTemp需要插入
@@ -190,6 +183,19 @@ public class MatchService {
             matchDao.deleteItemByCompanyIdAndAliasname("CompanyAlias",companyId,aliasName);
             //5、MatchRecord表中去除该匹配记录
             matchDao.deleteItemByCompanyIdAndAliasname("MatchRecord",companyId,aliasName);
+        }else if(source.equals("patent")){
+            //1.根据aliasName(即专利中的企业名)去patentForMatchBackup表中找所有patentid
+            List<String> patentIdList = patentDao.getPatentIdListByEnterpriseName("patentForMatchBackup", aliasName);
+            for (String patentId : patentIdList) {
+                //2.将patentid,alisasName重新插回patentForMatch表(当前还是patentForMatchNew)中去
+                patentDao.updatePatentForMatch(patentId,aliasName);
+                //3.根据patentid和companyId去patent2enterprise中删除
+                patentDao.deleteItemInPatent2Enterprise(patentId,companyId);
+            }
+            //4、将aliasName和companyId从companyAlias表中删除
+            matchDao.deleteItemByCompanyIdAndAliasname("CompanyAlias",companyId,aliasName);
+            //5、将MatchRecord中companyid,aliasName删除
+            matchDao.deleteItemByCompanyIdAndAliasname("MatchRecord",companyId,aliasName);
         }
     }
 
@@ -198,4 +204,74 @@ public class MatchService {
             paperDao.updateAddressTemp(addressTemp);
         }
     }
+
+
+    public void getPatentForMatchToTable(){
+        //1、从Patent表中找出所有的patentid和enterpriseName
+        //用一个Map<String,List<String>>来接受查询结果，MapRow中将enterpriseName分割放入
+        List<PatentIdAndEnterpriseNames> patentIdAndEnterpriseNamesList = patentDao.getpatentIdAndEnterpriseNames();
+        //2、对每个patentid去patent2enterprise中查找对应的List<enterpriseid> ，
+        for (PatentIdAndEnterpriseNames patentIdAndEnterpriseNames:patentIdAndEnterpriseNamesList) {
+            updatePatentForMatch(patentIdAndEnterpriseNames);
+        }
+        // 如果存在：
+        // 看enterpriseid 的size 和 enterpriseName 的size 是否一致，一致说明这个专利已经被匹配过了，对下一条进行判断；
+        // 若不一致，说明有的被匹配过有的没有，找出enterpriseid对应name,查找缺失的那个插入数据库表
+        //如果不存在，说明这一整条都没被识别过，将enterpriseName和patentid作为一条记录插入待匹配表
+    }
+
+    public void updatePatentForMatch(PatentIdAndEnterpriseNames patentIdAndEnterpriseNames){
+        String[] enterpriseNames = patentIdAndEnterpriseNames.getEnterpriseNames();
+        //1、根据他的patentId去patent2enterprise中查找对应的List<enterpriseid>
+        List<String> enterpriseids = patentDao.getEnterpriseIdListByPatentId(patentIdAndEnterpriseNames.getPatentId());
+        //2、如果没有查到对应的id,那说明整条专利都没被匹配过，把他们放入待匹配表中
+        if(enterpriseids.size()==0){
+            for (String name:enterpriseNames) {
+                patentDao.putPatentToPatentForMatchTable(patentIdAndEnterpriseNames.getPatentId(),name);
+            }
+        }
+        //3、如果查到了
+        else{
+            //看一下查找到的id数量是否和enterpriseName数量相等
+            // 如果相等，说明这条专利都被匹配过了，跳过这条
+            if(enterpriseids.size() >= enterpriseNames.length)
+                return;
+            // 如果不相等
+            else{
+                //说明这条专利有的机构名被匹配过了，有的还没有
+                for (String enterpriseId:enterpriseids) {
+                    //找出每一个匹配过的名字，标记出来，剩下的就是没有匹配过的
+                    String enterpriseName = enterpriseDao.getEnterpriseNameById(enterpriseId);
+                    for(int i = 0;i < enterpriseNames.length;i++){
+                        if(enterpriseName.equals(enterpriseNames[i])){
+                            enterpriseNames[i] = "made";
+                        }
+                    }
+                }
+                //对于每一个没有被标记过的，即还没有匹配的，插入待匹配表中
+                for (String name:enterpriseNames) {
+                    if(!name.equals("made")){
+                        patentDao.putPatentToPatentForMatchTable(patentIdAndEnterpriseNames.getPatentId(),name);
+                    }
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public void updatePatent(int companyId,String aliasName){
+        //1、根据aliasName去patentForMatch表中查到所有该机构的专利id List<id>
+        List<String> patentIdList = patentDao.getPatentIdListByEnterpriseName("patentForMatch",aliasName);
+        //2、将List<id>中每一个patentid和companyId插入patent2Enterprise表中
+        for (String id : patentIdList) {
+            patentDao.updatePatent2Enterprise(id,companyId);
+        }
+        //3、将patentForMatch表中对应alisaName数据删除
+        patentDao.deleteItemByEnterpriseName("patentForMatch",aliasName);
+        //4、将aliasName和companyId置入companyAlias表中
+        matchDao.updateCompanyAlias(companyId,aliasName);
+        //5、记录在MatchRecord中
+        matchDao.updateMatchRecord(companyId,aliasName,"patent");
+    }
+
 }

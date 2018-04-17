@@ -21,13 +21,12 @@ public class EnterpriseDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Enterprise getEnterpriseById(Integer id) {
+    public String getEnterpriseNameById(String id) {
 
         String sql = "SELECT name FROM EnterpriseInfo WHERE id = ?";
-        RowMapper<Enterprise> rowMapper = new BeanPropertyRowMapper<>(Enterprise.class);
-        Enterprise enterprise = jdbcTemplate.queryForObject(sql, rowMapper, id);
-
-        return enterprise;
+        RowMapper<String> rowMapper = new BeanPropertyRowMapper<>(String.class);
+        String name = jdbcTemplate.queryForObject(sql, rowMapper, id);
+        return name;
     }
 
     public List<Enterprise> getAllEnterpriseList(){

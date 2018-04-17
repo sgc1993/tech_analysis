@@ -31,4 +31,8 @@ public class MatchDao {
     public void deleteItemByCompanyIdAndAliasname(String table,int companyid,String aliasName){
         jdbcTemplate.update(String.format("delete from %s where companyid = %d and aliasName = '%s'",table,companyid,aliasName));
     }
+
+    public void updateCompanyAlias(int companyId,String aliasName){
+        jdbcTemplate.update(String.format("INSERT INTO CompanyAlias VALUES(%d,'%s')",companyId,aliasName));
+    }
 }
