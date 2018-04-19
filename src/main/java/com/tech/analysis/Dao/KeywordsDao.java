@@ -26,6 +26,7 @@ public class KeywordsDao {
     /**
      * 根据传入的参数划分社区
      * @param partitionKey 划分社区依赖的属性
+     * CALL apoc.algo.community(25,['yearNewKeyword'],'partitionKey1','yearSimilar','OUTGOING','partitionKey',10000)
      */
     public void partitionCommunity(String partitionKey){
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();

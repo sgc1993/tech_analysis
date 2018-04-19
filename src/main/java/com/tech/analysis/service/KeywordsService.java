@@ -1,5 +1,6 @@
 package com.tech.analysis.service;
 import com.tech.analysis.Dao.KeywordsDao;
+import com.tech.analysis.Dao.LoadWordAndVector;
 import com.tech.analysis.Dao.CreatGraphAboutYear;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.List;
 public class KeywordsService {
     @Autowired
     private KeywordsDao keywordsDao;
+
     @Autowired
     private CreatGraphAboutYear creatGraphAboutYear;
     /**
@@ -23,7 +25,12 @@ public class KeywordsService {
     public String getTargetDependKeywords(String target){
         return keywordsDao.getJsonString(target);
     }
+
+    /**
+     * @return 返回5年的图谱
+     */
     public List<String> getYearGraph(){
         return creatGraphAboutYear.creatAll();
     }
+
 }

@@ -30,7 +30,7 @@ public class KeywordsController {
     }
 
     @RequestMapping("/yearKeywords")//年份
-    //得到精确查找字符串
+    //得到历年关键词图
     public List<String> getKeywordsList(){
         List<String> ans = keywordsService.getYearGraph();
         return  ans;
@@ -40,4 +40,6 @@ public class KeywordsController {
     public String predict(){
         return null;
     }
+
+
 }

@@ -23,14 +23,15 @@ public class CreatGraphAboutYear {
     public List<String> creatAll(){
         List<String> ans = new ArrayList<>();
         int[] years = {2005,2008,2010,2012,2014,2016};
+//        int[] years = {2011};
         KeywordsDao keywordsDao = new KeywordsDao();
         for (int year : years){
             HashMap<String,ArrayList<Integer>> data = creat(year);
             String tempCommunity =keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
             ans.add(tempCommunity);
         }
-        HashMap<String,ArrayList<Integer>> data = keywordsDao.getData("");
-        String str =keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
+//        HashMap<String,ArrayList<Integer>> data = keywordsDao.getData("");
+//        String str =keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
         return ans;
     }
 
@@ -38,14 +39,23 @@ public class CreatGraphAboutYear {
      * 创造出给定年份的图
      * @param year
      * @return
+     * MATCH (n:yearNewKeyword) WHERE n.year = "2011" return  n.name,n.partitionKey,n.partitionKey1
      */
     public HashMap<String,ArrayList<Integer>> creat(int year){
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
         HashMap<String,ArrayList<Integer>> data = new HashMap<String,ArrayList<Integer>>();
         StatementResult result = connect.excute(
-                "MATCH (n:yearKeyNode) WHERE n.year = "+ year +" RETURN n.name AS name,n.year AS year," +
-                        "n.Community AS Community,n.Community1 AS Community1",
+                "MATCH (n:yearNewKeyword) WHERE n.year = \""+year+"\" RETURN n.name AS name,n.year AS year," +
+                        "n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                 parameters( "", "" ));//获取结果集
+//        StatementResult result = connect.excute(
+//                "MATCH (n:yearNewKeyword) WHERE n.year = \""+ year +" \" RETURN n.name AS name,n.year AS year," +
+//                        "n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
+//                parameters( "", "" ));//获取结果集
+//        StatementResult result = connect.excute(
+//                "MATCH (n:yearKeyNode) WHERE n.year = "+ year +" RETURN n.name AS name,n.year AS year," +
+//                        "n.Community AS Community,n.Community1 AS Community1",
+//                parameters( "", "" ));//获取结果集
 
         int count = 0;
         int good = 0;
@@ -56,8 +66,11 @@ public class CreatGraphAboutYear {
             Record record = result.next();
             try {
                 ArrayList<Integer> templist = new ArrayList<Integer>();
-                templist.add(record.get("Community").asInt());
-                templist.add(record.get("Community1").asInt());
+//                System.out.println(record.get("partitionKey").asInt());
+//                System.out.println(record.get("partitionKey1").asInt());
+//                System.out.println(record.get( "name" ).asString());
+                templist.add(record.get("partitionKey").asInt());
+                templist.add(record.get("partitionKey1").asInt());
                 data.put(record.get( "name" ).asString(),templist);
                 ++good;
             }catch (Exception e){
