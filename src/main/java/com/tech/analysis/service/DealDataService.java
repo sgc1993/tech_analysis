@@ -1,5 +1,6 @@
 package com.tech.analysis.service;
 
+import com.tech.analysis.Dao.GenerateCSV;
 import com.tech.analysis.Dao.LoadWordAndVector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,11 +16,20 @@ import java.io.IOException;
 public class DealDataService {
     @Autowired
     private LoadWordAndVector loadWordAndVector;
+    @Autowired
+    private GenerateCSV generateCSV;
 
     /**
      * 生成OriginalData.dat  内容是摘要和标题
      */
     public void buildSimiliarModel(){
         loadWordAndVector.buildModel();
+    }
+
+    /**
+     * 生成关键字和关系的csv
+     */
+    public void getKeyWordsAndRelationCSV(){
+        generateCSV.buildKeyAndRelationCSV();
     }
 }

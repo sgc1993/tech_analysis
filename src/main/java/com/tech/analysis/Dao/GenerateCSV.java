@@ -2,11 +2,17 @@ package com.tech.analysis.Dao;
 
 import com.tech.analysis.entity.KeywordEntity;
 import com.tech.analysis.entity.RelationshipEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -15,16 +21,123 @@ import java.util.List;
  * id,name,Alias
  * from_id,times,to_id
  */
-//@Repository
+@Repository
 public class GenerateCSV {
-    public void dealCSV(){
-        String filename = "paper.dat";
-        GenerateCSV generateCSV = new GenerateCSV();
-        generateCSV.generate(filename);
-    }
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     private long nodeId = 0l;
     private long relationshipId = 0l;
     private long count = 0;
+
+    /**
+     * 产生导入数据所需的 csv 文件
+     * 产生节点CSV和关系CSV
+     * id,name,Alias
+     * from_id,times,to_id
+     */
+    public void buildKeyAndRelationCSV(){
+        try {
+            getPaperAndPatentData();
+//        String filename = "paper.dat";
+            String filename = "paperAndPatent.dat";//用空格区分
+            GenerateCSV generateCSV = new GenerateCSV();
+            generateCSV.generate(filename);
+        }catch (Exception e){
+            System.out.println("从SQL数据库取出数据时发生错误！");
+        }
+    }
+
+    /**
+     * 从sql中拿出并存储标题、摘要的关键字
+     * @throws Exception
+     */
+
+    public void getPaperAndPatentData() throws Exception{
+        BufferedWriter out = new BufferedWriter(new FileWriter("paperAndPatent.dat"));;
+        try {
+            String[] sqls = {"select pubyear,keywords from Paper ","select success_date,keywords from Patent "};
+
+            List<String> paperDataList = getSQLPaperback(sqls[0]);
+            List<String> patentDataList = getSQLPaperback(sqls[0]);
+            int goodCount = 0;
+            int goodCount1 = 0;
+            int badCount = 0;
+            int badCount1 = 0;
+            if (paperDataList != null){
+                for (String string : paperDataList){
+                    if (string == null){
+                        ++badCount;
+                        continue;
+                    }
+                    ++goodCount;
+                    out.write(string);
+                    out.newLine();
+                    out.flush();
+                }
+            }
+            if (patentDataList != null){
+                for (String string : patentDataList){
+                    if (string == null){
+                        ++badCount1;
+                        continue;
+                    }
+                    ++goodCount1;
+                    out.write(string);
+                    out.newLine();
+                    out.flush();
+                }
+            }
+            System.out.println("goodCount: "+goodCount);
+            System.out.println("goodCount1: "+goodCount1);
+            System.out.println("badCount: "+badCount);
+            System.out.println("badCount1: "+badCount1);
+        }catch (Exception e){
+            System.out.println("写入keywords文件失败");
+//            out.close();
+        }finally {
+            out.close();
+        }
+
+    }
+
+    /**
+     * 从sql数据库中拿出摘要和标题的关键字和年份
+     * @param sql 命令
+     * @return 查询出的信息
+     */
+
+    public List<String> getSQLPaperback(String sql){
+        List<String> dataList = jdbcTemplate.query(sql, new RowMapper<String>(){
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String keywords =  rs.getString("keywords");
+                String pubyear =  rs.getString("pubyear");
+                if (pubyear == null)
+                    return null;
+                return pubyear.trim()+" "+keywords;
+            }
+        });
+        return dataList;
+    }
+
+    /**
+     * 从sql数据库中拿出专利的关键字和年份
+     * @param sql 命令
+     * @return 查询出的信息
+     */
+    public List<String> getSQLPatentback(String sql){
+        List<String> dataList = jdbcTemplate.query(sql, new RowMapper<String>(){
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String keywords =  rs.getString("keywords");
+                String pubyear =  rs.getString("success_date");
+                if (pubyear == null)
+                    return null;
+                return pubyear.trim().substring(0,4)+" "+keywords;
+            }
+        });
+        return dataList;
+    }
 
     /**
      * 返回关键字列表
@@ -33,7 +146,7 @@ public class GenerateCSV {
      */
     public List<String> getKeyWords(String line){//获取关键字列表
         List<String> keywords = new ArrayList<String>();
-        String[] strings = line.trim().split("!");
+        String[] strings = line.trim().split(" "); //paperAndPatent.dat用空格区分
         if (strings.length > 2){
             for (int i = 2; i < strings.length; i++){
                 if (strings[i].trim().length() < 2){
@@ -52,7 +165,7 @@ public class GenerateCSV {
      */
     public List<String> getYearKeyWords(String line){//获取关键字列表
         List<String> keywords = new ArrayList<String>();
-        String[] strings = line.trim().split("!");
+        String[] strings = line.trim().split(" ");//paperAndPatent.dat用空格区分
         if (strings.length<=2 || strings[1].trim().length() != 4){
             ++count;
             System.out.println("error data: " + line + strings.length);

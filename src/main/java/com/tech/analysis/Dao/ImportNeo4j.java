@@ -3,7 +3,7 @@ package com.tech.analysis.Dao;
 import static org.neo4j.driver.v1.Values.parameters;
 
 /**
- * 该类的主要功能是向neo4j中插入数据
+ * 该类的主要功能是向neo4j中插入数据 适合1--100000数据量
  */
 public class ImportNeo4j {
     /**

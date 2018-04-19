@@ -16,7 +16,19 @@ public class DealDataController {
 
     @RequestMapping("/similiarModel")
     //得到预测结果
+    /**
+     * 构建计算相似度的模型
+     */
     public void get(){
         dealDataService.buildSimiliarModel();
+    }
+
+    @RequestMapping("/buildCSV")
+    //得到预测结果
+    /**
+     * 构建导入neo4j的keywords和relationship 的 CSV文件
+     */
+    public void getCSV(){
+        dealDataService.getKeyWordsAndRelationCSV();
     }
 }
