@@ -1,6 +1,7 @@
 package com.tech.analysis.service;
 
 import com.tech.analysis.Dao.GenerateCSV;
+import com.tech.analysis.Dao.KeywordsPrediction;
 import com.tech.analysis.Dao.LoadWordAndVector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,8 @@ public class DealDataService {
     private LoadWordAndVector loadWordAndVector;
     @Autowired
     private GenerateCSV generateCSV;
+    @Autowired
+    private KeywordsPrediction keywordsPrediction;
 
     /**
      * 生成OriginalData.dat  内容是摘要和标题
@@ -31,5 +34,12 @@ public class DealDataService {
      */
     public void getKeyWordsAndRelationCSV(){
         generateCSV.buildKeyAndRelationCSV();
+    }
+
+    /**
+     * 生成预测关键字linearModelPrediction.dat
+     */
+    public void getPredictionKeywords(){
+        keywordsPrediction.predict();
     }
 }

@@ -31,4 +31,13 @@ public class DealDataController {
     public void getCSV(){
         dealDataService.getKeyWordsAndRelationCSV();
     }
+
+    @RequestMapping("/PredictionKeywords")
+    /**
+     * 根据历史预测关键字
+     */
+    public void PredictionKeywords(){
+        dealDataService.getPredictionKeywords();
+    }
+
 }

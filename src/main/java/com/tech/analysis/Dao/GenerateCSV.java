@@ -182,7 +182,7 @@ public class GenerateCSV {
     }
 
     /**
-     * 给定文件名，将该文件写成CSV文件供写入neo4j使用
+     * 给定文件名，将该文件写成CSV文件供写入neo4j使用,并把各个对象写下来，用于更新数据
      * @param file 文件名
      */
     public void generate(String file) {
@@ -233,6 +233,14 @@ public class GenerateCSV {
             boolean flagrelationship = writeRelationshipCSV(relationships,"E:\\tech_analysis","relationship");
             boolean flagyearKeywords = writeYearKeywordsCSV(yearKeywords,"E:\\tech_analysis","yearKeywords");
             boolean flagyearRelationship = writeYearRelationshipCSV(yearRelationships,"E:\\tech_analysis","yearRelationship");
+
+            UtilWrite.WriteKeywords(keywords);
+            UtilWrite.WriteRelationships(relationships);
+            UtilWrite.WriteKeywordsTimes(keywordTimes);
+
+            UtilWrite.WriteYearKeywords(yearKeywords);
+            UtilWrite.WriteYearRelationships(yearRelationships);
+            UtilWrite.WriteYearKeywordsTimes(yearKeywordTimes);
             System.out.println(flagkeywords);
             System.out.println(flagrelationship);
             System.out.println("errorline: "+count);
@@ -505,9 +513,9 @@ public class GenerateCSV {
                             relationships.get(str).getTimes()+'\n';
                 write.write(temp);
 //                write.write('\n');
+                write.flush();
                 ++countreyear;
             }
-            write.flush();
             write.close();
         }catch (IOException e){
             flag = false;

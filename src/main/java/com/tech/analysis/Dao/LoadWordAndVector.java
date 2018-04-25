@@ -100,9 +100,9 @@ public class LoadWordAndVector {
             }
             in.close();
             pr.waitFor();
-            System.out.println("End pyton");
+            System.out.println("End python，word2vector训练完毕");
         }catch (Exception e){
-
+            System.out.println("调用GetWordAndVexDoc训练模型失败！");
         }
     }
     /**
