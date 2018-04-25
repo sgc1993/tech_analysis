@@ -156,8 +156,7 @@ public class KeywordsPrediction {
      * 制作字典
      */
     public HashMap<String, KeywordEntity> makeDictionary(){
-        HashMap<String, KeywordEntity> keywords = UtilRead.readKeywords();
-        return keywords;
+        return UtilRead.readKeywords();
     }
 
 }
