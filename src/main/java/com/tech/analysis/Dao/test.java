@@ -19,14 +19,16 @@ import static org.neo4j.driver.v1.Values.parameters;
 public class test {
 
     public static void main(String[] args){
-        WordModel wordModel = new WordModel();
-        System.out.println(wordModel.wordMap.size());
-        List<String> list = wordModel.distance("卫星通信");
-//        List<String> list = wordModel.distance("人工智能");
-        if (list != null){
-            for (String string : list)
-                System.out.println(string);
-        }
+        String string = "卫星通信2011";
+        System.out.println(string.substring(0,string.length()-4));
+//        WordModel wordModel = new WordModel();
+//        System.out.println(wordModel.wordMap.size());
+//        List<String> list = wordModel.distance("卫星通信");
+////        List<String> list = wordModel.distance("人工智能");
+//        if (list != null){
+//            for (String string : list)
+//                System.out.println(string);
+//        }
 //        LoadWordAndVector loadWordAndVector = new LoadWordAndVector();
 //        loadWordAndVector.buildModel();
 //        System.out.println("start");

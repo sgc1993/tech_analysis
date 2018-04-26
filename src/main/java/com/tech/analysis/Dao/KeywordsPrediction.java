@@ -62,6 +62,8 @@ public class KeywordsPrediction {
     }
 
 
+
+
     public void LearnAndPreWithLinerModel(){
         try {
             System.out.println("Starting training linear model.....");
@@ -136,7 +138,8 @@ public class KeywordsPrediction {
             Record record = result.next();
             try {
                 ArrayList<Integer> templist = new ArrayList<Integer>();
-                String string_name = record.get("name").asString();
+                String tempKeyword = record.get("name").asString();
+                String string_name = tempKeyword.substring(0,tempKeyword.length()-4);
                 long times = record.get("times").asInt();
                 data.put(string_name,times);
                 ++good;
