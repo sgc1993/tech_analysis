@@ -21,6 +21,7 @@ public class KeywordsDao {
 //    }
     /**
      * @param query 给定目标词
+     *
      * @return 目标词社区的字符串
      */
     public String getJsonString(String query){

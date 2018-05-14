@@ -25,6 +25,7 @@ public class DealDataService {
 
     /**
      * 生成OriginalData.dat  内容是摘要和标题
+     *
      */
     public void buildSimiliarModel(){
         loadWordAndVector.buildModel();

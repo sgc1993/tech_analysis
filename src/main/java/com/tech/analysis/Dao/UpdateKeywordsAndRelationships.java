@@ -13,6 +13,7 @@ import java.util.HashMap;
 public class UpdateKeywordsAndRelationships {
     static {
         //存储不带年份的keywordTimes
+
         HashMap<String, Long> keywordTimes = UtilRead.readKeywordTimes();
         //存储不带年份的keywords
         HashMap<String, KeywordEntity> keywords = UtilRead.readKeywords();

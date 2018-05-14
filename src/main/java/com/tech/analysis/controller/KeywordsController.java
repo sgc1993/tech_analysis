@@ -25,6 +25,7 @@ public class KeywordsController {
     //得到精确查找字符串
     public String getKeywords(@RequestParam String target){
         //String target = (String) map.get("target");//目标词汇
+
         System.out.println(target);
         return keywordsService.getTargetDependKeywords(target);
     }

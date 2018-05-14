@@ -9,6 +9,7 @@ import com.tech.analysis.entity.WordEntry;
  */
 public class WordModel {
     /**
+     *
      * 载入模型 HashMap<String, double[]>
      * @return HashMap<String, double[]>
      */

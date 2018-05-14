@@ -165,6 +165,7 @@ public class UtilRead {
         return yearKeywordTimes;
     }
 
+
     public static HashMap<String, Long> readPredictionKeyword() {
 //        String prefilePath = "E:\\tech_analysis\\py\\model\\linearModelPrediction.dat";
         String prefilePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/linearModelPrediction.dat";

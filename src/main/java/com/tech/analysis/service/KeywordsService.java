@@ -28,6 +28,7 @@ public class KeywordsService {
 
     /**
      * @return 返回5年的图谱
+     *
      */
     public List<String> getYearGraph(){
         return creatGraphAboutYear.creatAll();
