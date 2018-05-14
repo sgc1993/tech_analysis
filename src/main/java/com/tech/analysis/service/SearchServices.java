@@ -30,6 +30,7 @@ public class SearchServices
 
 
 
+
         WordModel get_word=new WordModel();
         List<String> list = new ArrayList<String>();
         JsonObject obj=new JsonObject();
