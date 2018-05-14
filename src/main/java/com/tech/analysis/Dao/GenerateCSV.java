@@ -28,6 +28,7 @@ public class GenerateCSV {
     private long nodeId = 0l;
     private long relationshipId = 0l;
     private long count = 0;
+    private long yearCount = 0;
 
     /**
      * 产生导入数据所需的 csv 文件
@@ -41,8 +42,10 @@ public class GenerateCSV {
 //        String filename = "paper.dat";
             String filename = "paperAndPatent.dat";//用空格区分
             GenerateCSV generateCSV = new GenerateCSV();
-            generateCSV.generate(filename);
+            generateCSV.generate(filename);//得到关键字 和 relation CSV
+            generateCSV.yearGenerate(filename);//得到关于年份的关键字 和 yearrelation CSV
         }catch (Exception e){
+            e.printStackTrace();
             System.out.println("从SQL数据库取出数据时发生错误！");
         }
     }
@@ -53,12 +56,18 @@ public class GenerateCSV {
      */
 
     public void getPaperAndPatentData() throws Exception{
-        BufferedWriter out = new BufferedWriter(new FileWriter("paperAndPatent.dat"));;
+        BufferedWriter out = new BufferedWriter(new FileWriter("paperAndPatent.dat"));
         try {
-            String[] sqls = {"select pubyear,keywords from Paper ","select success_date,keywords from Patent "};
+//            String[] sqls = {"select pubyear,keywords from paper ","select success_date,keywords from Patent "};
+//            String[] sqls = {"select pubyear,keywords_cn from papertest ","select success_date,keywords_cn from Patent "};
+            String[] sqls = {"select pubyear,keywords from papertest ","select success_date,keywords from Patent "};
 
             List<String> paperDataList = getSQLPaperback(sqls[0]);
-            List<String> patentDataList = getSQLPaperback(sqls[0]);
+            List<String> patentDataList = getSQLPatentback(sqls[1]);
+            System.out.print("geted data from sql");
+            System.out.println("paper datalist size: "+paperDataList.size());
+            System.out.println("patent datalist size: "+patentDataList.size());
+            System.out.println("start Writing data");
             int goodCount = 0;
             int goodCount1 = 0;
             int badCount = 0;
@@ -71,6 +80,7 @@ public class GenerateCSV {
                     }
                     ++goodCount;
                     out.write(string);
+                    System.out.println("paper: "+string);
                     out.newLine();
                     out.flush();
                 }
@@ -83,6 +93,7 @@ public class GenerateCSV {
                     }
                     ++goodCount1;
                     out.write(string);
+                    System.out.println("patent: "+string);
                     out.newLine();
                     out.flush();
                 }
@@ -92,6 +103,7 @@ public class GenerateCSV {
             System.out.println("badCount: "+badCount);
             System.out.println("badCount1: "+badCount1);
         }catch (Exception e){
+            e.printStackTrace();
             System.out.println("写入keywords文件失败");
 //            out.close();
         }finally {
@@ -107,6 +119,7 @@ public class GenerateCSV {
      */
 
     public List<String> getSQLPaperback(String sql){
+        System.out.println("start get paper data from sql");
         List<String> dataList = jdbcTemplate.query(sql, new RowMapper<String>(){
             @Override
             public String mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -114,9 +127,12 @@ public class GenerateCSV {
                 String pubyear =  rs.getString("pubyear");
                 if (pubyear == null)
                     return null;
+//                System.out.println("paper: "+pubyear.trim()+" "+keywords);
                 return pubyear.trim()+" "+keywords;
+//                return null;
             }
         });
+        System.out.println("paper datalist size: "+dataList.size());
         return dataList;
     }
 
@@ -126,6 +142,7 @@ public class GenerateCSV {
      * @return 查询出的信息
      */
     public List<String> getSQLPatentback(String sql){
+        System.out.println("start get patent data from sql");
         List<String> dataList = jdbcTemplate.query(sql, new RowMapper<String>(){
             @Override
             public String mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -133,9 +150,12 @@ public class GenerateCSV {
                 String pubyear =  rs.getString("success_date");
                 if (pubyear == null)
                     return null;
+//                System.out.println("patent: "+pubyear.trim().substring(0,4)+" "+keywords);
                 return pubyear.trim().substring(0,4)+" "+keywords;
+//                return null;
             }
         });
+        System.out.println("patent datalist size: "+dataList.size());
         return dataList;
     }
 
@@ -144,18 +164,23 @@ public class GenerateCSV {
      * @param line 读入的一行数据
      * @return
      */
-    public List<String> getKeyWords(String line){//获取关键字列表
-        List<String> keywords = new ArrayList<String>();
+//    public List<String> getKeyWords(String line,List<String> keywords){//获取关键字列表
+    public void getKeyWords(String line,List<String> keywords){//获取关键字列表
+//        List<String> keywords = new ArrayList<String>();
         String[] strings = line.trim().split(" "); //paperAndPatent.dat用空格区分
         if (strings.length > 2){
-            for (int i = 2; i < strings.length; i++){
+            for (int i = 1; i < strings.length; i++){
                 if (strings[i].trim().length() < 2){
                     continue;
                 }
                 keywords.add(strings[i].trim().replace("\""," "));
             }
+        }else {
+            System.out.println("error line: " + line + " " + strings.length);
+//            return null;
+            return;
         }
-        return keywords;
+//        return keywords;
     }
 
     /**
@@ -163,22 +188,23 @@ public class GenerateCSV {
      * @param line 读入数据
      * @return
      */
-    public List<String> getYearKeyWords(String line){//获取关键字列表
-        List<String> keywords = new ArrayList<String>();
+//    public List<String> getYearKeyWords(String line,List<String> keywords){//获取关键字列表
+    public void getYearKeyWords(String line,List<String> keywords){//获取关键字列表
+//        List<String> keywords = new ArrayList<String>();
         String[] strings = line.trim().split(" ");//paperAndPatent.dat用空格区分
-        if (strings.length<=2 || strings[1].trim().length() != 4){
-            ++count;
-            System.out.println("error data: " + line + strings.length);
-            return  keywords;
+        if (strings.length<=2 || strings[0].trim().length() != 4){
+            ++yearCount;
+            System.out.println("error data: " + line +" "+ strings.length);
+            return;
         }
         if (strings.length > 2){
-            for (int i = 2; i < strings.length; i++){
+            for (int i = 1; i < strings.length; i++){
                 if (strings[i].trim().length() < 2)
                     continue;
-                keywords.add(strings[i].trim().replace("\""," ")+strings[1].trim().replace("\""," "));
+                keywords.add(strings[i].trim().replace("\""," ")+strings[0].trim().replace("\""," "));
             }
         }
-        return keywords;
+//        return keywords;
     }
 
     /**
@@ -194,56 +220,93 @@ public class GenerateCSV {
             HashMap<String, RelationshipEntity> relationships = new HashMap<String, RelationshipEntity>();
             //keywords和relationships的ID
 
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+            String line = "";
+            int lineCount = 0;
+            //获取keyword实体
+            List<String> getKeywords = new ArrayList<>();
+            List<Long> keywordIdList = new ArrayList<Long>();
+            while (true) {
+                System.out.println("行数： "+(++lineCount));
+                line = bufferedReader.readLine();
+                if (line == null || line.trim().equals("")) break;
+                if(getKeywords.size() > 0)
+                    getKeywords.clear();
+//                getKeywords = getKeyWords(line,getKeywords);//可以考虑将该对象传入函数，能减少大部分局部变量的创建
+                getKeyWords(line,getKeywords);//可以考虑将该对象传入函数，能减少大部分局部变量的创建
+//                if (getKeywords != null)
+//                    System.out.println("keyword:   "+getKeywords);
+                if (keywordIdList.size() > 0)
+                    keywordIdList.clear();
+                addLineKeyWords(keywords,keywordTimes,getKeywords,keywordIdList);
+                addLineRelationship(relationships,keywordIdList);
+
+//                getYearKeywords = getYearKeyWords(line,getYearKeywords);
+//                if (getYearKeywords != null)
+//                    System.out.println("getYearKeywords:   "+getYearKeywords);
+            }
+            System.out.println("keywordTime size : " + keywordTimes.size());
+            System.out.println("keywords size : " + keywords.size());
+            System.out.println("relationships size : " + relationships.size());
+
+            //写入文件中
+            boolean flagkeywords = writeKeywordsCSV(keywords,"/home/zhzy/Downloads/xcy/tech_analysis","keywords");
+            boolean flagrelationship = writeRelationshipCSV(relationships,"/home/zhzy/Downloads/xcy/tech_analysis","relationship");
+
+            UtilWrite.WriteKeywords(keywords);
+            UtilWrite.WriteRelationships(relationships);
+            UtilWrite.WriteKeywordsTimes(keywordTimes);
+
+            System.out.println(flagkeywords);
+            System.out.println(flagrelationship);
+            System.out.println("errorline: "+count);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void yearGenerate(String file) {
+        try {
             //存储带年份的yearKeywordTimes
             HashMap<String, Long> yearKeywordTimes = new HashMap<String, Long>();
             //存储带年份的yearKeywords
             HashMap<String, KeywordEntity> yearKeywords = new HashMap<String, KeywordEntity>();
             HashMap<String, RelationshipEntity> yearRelationships = new HashMap<String, RelationshipEntity>();
             //yearKeywords和yearRelationships的ID
-//            long yeadNodeId = 0l;
-//            long yearRelationshipId = 0l;
             BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
             String line = "";
+            int lineCount = 0;
+            //获取keyword实体
+            List<String> getYearKeywords = new ArrayList<>();
+            List<Long> yearKeywordIdList = new ArrayList<Long>();
             while (true) {
+                System.out.println("行数： "+(++lineCount));
                 line = bufferedReader.readLine();
                 if (line == null || line.trim().equals("")) break;
 
-                //获取keyword实体
-                List<String> getKeywords = getKeyWords(line);
-                System.out.println("keyword:   "+getKeywords);
-                List<Long> keywordIdList = new ArrayList<Long>();
-                addLineKeyWords(keywords,keywordTimes,getKeywords,keywordIdList);
-                addLineRelationship(relationships,keywordIdList);
-
-                List<String> getYearKeywords = getYearKeyWords(line);
-                System.out.println("getYearKeywords:   "+getYearKeywords);
-                List<Long> yearKeywordIdList = new ArrayList<Long>();
+                if (getYearKeywords.size() > 0)
+                    getYearKeywords.clear();
+//                getYearKeywords = getYearKeyWords(line,getYearKeywords);
+                getYearKeyWords(line,getYearKeywords);
+//                if (getYearKeywords != null)
+//                    System.out.println("getYearKeywords:   "+getYearKeywords);
+                yearKeywordIdList.clear();
                 addLineKeyWords(yearKeywords,yearKeywordTimes,getYearKeywords,yearKeywordIdList);
                 addLineRelationship(yearRelationships,yearKeywordIdList);
             }
-            System.out.println("keywordTime size : " + keywordTimes.size());
-            System.out.println("keywords size : " + keywords.size());
-            System.out.println("relationships size : " + relationships.size());
 
             System.out.println("yearKeywordTimes size : " + yearKeywordTimes.size());
             System.out.println("yearKeywords size : " + yearKeywords.size());
             System.out.println("yearRelationships size : " + yearRelationships.size());
             //写入文件中
-            boolean flagkeywords = writeKeywordsCSV(keywords,"E:\\tech_analysis","keywords");
-            boolean flagrelationship = writeRelationshipCSV(relationships,"E:\\tech_analysis","relationship");
-            boolean flagyearKeywords = writeYearKeywordsCSV(yearKeywords,"E:\\tech_analysis","yearKeywords");
-            boolean flagyearRelationship = writeYearRelationshipCSV(yearRelationships,"E:\\tech_analysis","yearRelationship");
+            boolean flagyearKeywords = writeYearKeywordsCSV(yearKeywords,"/home/zhzy/Downloads/xcy/tech_analysis","yearKeywords");
+            boolean flagyearRelationship = writeYearRelationshipCSV(yearRelationships,"/home/zhzy/Downloads/xcy/tech_analysis","yearRelationship");
 
-            UtilWrite.WriteKeywords(keywords);
-            UtilWrite.WriteRelationships(relationships);
-            UtilWrite.WriteKeywordsTimes(keywordTimes);
 
             UtilWrite.WriteYearKeywords(yearKeywords);
             UtilWrite.WriteYearRelationships(yearRelationships);
             UtilWrite.WriteYearKeywordsTimes(yearKeywordTimes);
-            System.out.println(flagkeywords);
-            System.out.println(flagrelationship);
-            System.out.println("errorline: "+count);
+            System.out.println("errorline: "+yearCount);
             System.out.println(flagyearKeywords);
             System.out.println(flagyearRelationship);
         } catch (IOException e) {
@@ -262,6 +325,7 @@ public class GenerateCSV {
                                 HashMap<String, Long> keywordTimes,
                                 List<String> getKeywords,
                                 List<Long> keywordIdList){
+        if (getKeywords == null) return;
         for (String keyword : getKeywords) {
             if (!keywordTimes.containsKey(keyword)) {
                 keywordTimes.put(keyword, 1l);
@@ -341,7 +405,8 @@ public class GenerateCSV {
 
 
             // 将格式化后的字符串写入文件
-            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
+            Writer write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+//            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
             write.write("l:label\tid:string:KeywordId\tname\n");
             for (String str : keywords.keySet()){
 //                if (keywords.get(str).getName().length() < 3)
@@ -353,6 +418,7 @@ public class GenerateCSV {
             }
             write.flush();
             write.close();
+            System.out.println("关键字CSV写入成功！");
         } catch (IOException e) {
             flag = false;
             System.out.println("keywords write error1 !");
@@ -395,12 +461,14 @@ public class GenerateCSV {
 
 
             // 将格式化后的字符串写入文件
-            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
+            Writer write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+//            Writer write = new OutputStreamWriter(new FileOutputStream(file), "GBK");
             write.write("l:label\tid:string:yearKeywordId\tname\tyear\n");
             for (String str : yearkeywords.keySet()){
                 KeywordEntity key = yearkeywords.get(str);
                 String year = key.getName().substring(key.getName().length()-4,
                         key.getName().length());
+//                System.out.println("year: "+year+ " "+key.getName());
                 String temp = "yearNewKeyword\t"+key.getId()+"\t"+key.getName()+"\t"+year;
                 write.write(temp);
                 write.write('\n');
@@ -408,6 +476,7 @@ public class GenerateCSV {
             }
             write.flush();
             write.close();
+            System.out.println("包含年份关键字CSV写入成功！");
         } catch (IOException e) {
             flag = false;
             System.out.println("keywords write error1 !");
@@ -464,6 +533,7 @@ public class GenerateCSV {
             }
             write.flush();
             write.close();
+            System.out.println("关系CSV写入成功！");
         }catch (IOException e){
             flag = false;
             System.out.println("relationship write error !");
@@ -513,10 +583,11 @@ public class GenerateCSV {
                             relationships.get(str).getTimes()+'\n';
                 write.write(temp);
 //                write.write('\n');
-                write.flush();
                 ++countreyear;
             }
+            write.flush();
             write.close();
+            System.out.println("包含年份关系CSV写入成功！");
         }catch (IOException e){
             flag = false;
             System.out.println("relationship write error !");

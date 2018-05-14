@@ -2,12 +2,14 @@ package com.tech.analysis.Dao;
 
 import com.tech.analysis.entity.KeywordEntity;
 import com.tech.analysis.entity.RelationshipEntity;
+import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 
 /**
  * Created by XCY on 2018/4/25.
  */
+//@Repository
 public class UpdateKeywordsAndRelationships {
     static {
         //存储不带年份的keywordTimes
@@ -23,6 +25,7 @@ public class UpdateKeywordsAndRelationships {
         HashMap<String, KeywordEntity> yearKeywords = UtilRead.readYearKeywords();
         HashMap<String, RelationshipEntity> yearRelationships = UtilRead.readYearRelationships();
     }
+
 
     public void Update(){//更新关键词和关系
 

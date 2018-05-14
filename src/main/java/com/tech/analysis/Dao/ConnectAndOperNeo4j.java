@@ -9,7 +9,9 @@ import org.springframework.stereotype.Repository;
 public class ConnectAndOperNeo4j {
 //    private org.neo4j.driver.v1.Driver driver = GraphDatabase.driver( "bolt://10.168.103.21:7687",
 //            AuthTokens.basic( "neo4j", "123456" ));//配置驱动
-    private org.neo4j.driver.v1.Driver driver = GraphDatabase.driver( "bolt://10.168.103.78:7687",
+//    private org.neo4j.driver.v1.Driver driver = GraphDatabase.driver( "bolt://10.168.103.78:7687",
+//            AuthTokens.basic( "neo4j", "123456" ));//配置驱动
+    private org.neo4j.driver.v1.Driver driver = GraphDatabase.driver( "bolt://10.168.103.68:7687",
             AuthTokens.basic( "neo4j", "123456" ));//配置驱动
     private Session session = driver.session();
 //    /**

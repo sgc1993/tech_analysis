@@ -19,7 +19,8 @@ public class UtilRead {
         FileInputStream freader;
         HashMap<String, double[]> wordMap  = new HashMap<String, double[]>();;
         try {
-            String filePath = "E:\\tech_analysis\\py\\model\\model.dat";
+//            String filePath = "E:\\tech_analysis\\py\\model\\model.dat";
+            String filePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/model.dat";
             freader = new FileInputStream(filePath);
             ObjectInputStream objectInputStream = new ObjectInputStream(freader);
 //            HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
@@ -40,7 +41,8 @@ public class UtilRead {
         FileInputStream freader;
         HashMap<String, KeywordEntity> keywords = new HashMap<String, KeywordEntity>();
         try {
-            String filePath = "E:\\tech_analysis\\py\\model\\KeywordsObject.dat";
+//            String filePath = "E:\\tech_analysis\\py\\model\\KeywordsObject.dat";
+            String filePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/KeywordsObject.dat";
             freader = new FileInputStream(filePath);
             ObjectInputStream objectInputStream = new ObjectInputStream(freader);
 //            HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
@@ -61,7 +63,8 @@ public class UtilRead {
         FileInputStream freader;
         HashMap<String, KeywordEntity> yearKeywords = new HashMap<String, KeywordEntity>();
         try {
-            String filePath = "E:\\tech_analysis\\py\\model\\YearKeywordsObject.dat";
+//            String filePath = "E:\\tech_analysis\\py\\model\\YearKeywordsObject.dat";
+            String filePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/YearKeywordsObject.dat";
             freader = new FileInputStream(filePath);
             ObjectInputStream objectInputStream = new ObjectInputStream(freader);
 //            HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
@@ -82,7 +85,8 @@ public class UtilRead {
         FileInputStream freader;
         HashMap<String, RelationshipEntity> relationships = new HashMap<String, RelationshipEntity>();
         try {
-            String filePath = "E:\\tech_analysis\\py\\model\\RelationshipsObject.dat";
+//            String filePath = "E:\\tech_analysis\\py\\model\\RelationshipsObject.dat";
+            String filePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/RelationshipsObject.dat";
             freader = new FileInputStream(filePath);
             ObjectInputStream objectInputStream = new ObjectInputStream(freader);
 //            HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
@@ -103,7 +107,8 @@ public class UtilRead {
         FileInputStream freader;
         HashMap<String, RelationshipEntity> yearRelationships = new HashMap<String, RelationshipEntity>();
         try {
-            String filePath = "E:\\tech_analysis\\py\\model\\YearRelationshipsObject.dat";
+//            String filePath = "E:\\tech_analysis\\py\\model\\YearRelationshipsObject.dat";
+            String filePath = "E/home/zhzy/Downloads/xcy/tech_analysis/py/model/YearRelationshipsObject.dat";
             freader = new FileInputStream(filePath);
             ObjectInputStream objectInputStream = new ObjectInputStream(freader);
 //            HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
@@ -124,7 +129,8 @@ public class UtilRead {
         FileInputStream freader;
         HashMap<String, Long> keywordTimes = new HashMap<String, Long>();
         try {
-            String filePath = "E:\\tech_analysis\\py\\model\\KeywordsTimesObject.dat";
+//            String filePath = "E:\\tech_analysis\\py\\model\\KeywordsTimesObject.dat";
+            String filePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/KeywordsTimesObject.dat";
             freader = new FileInputStream(filePath);
             ObjectInputStream objectInputStream = new ObjectInputStream(freader);
 //            HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
@@ -145,7 +151,8 @@ public class UtilRead {
         FileInputStream freader;
         HashMap<String, Long> yearKeywordTimes = new HashMap<String, Long>();
         try {
-            String filePath = "E:\\tech_analysis\\py\\model\\YearKeywordsTimesObject.dat";
+//            String filePath = "E:\\tech_analysis\\py\\model\\YearKeywordsTimesObject.dat";
+            String filePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/YearKeywordsTimesObject.dat";
             freader = new FileInputStream(filePath);
             ObjectInputStream objectInputStream = new ObjectInputStream(freader);
 //            HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
@@ -159,7 +166,8 @@ public class UtilRead {
     }
 
     public static HashMap<String, Long> readPredictionKeyword() {
-        String prefilePath = "E:\\tech_analysis\\py\\model\\linearModelPrediction.dat";
+//        String prefilePath = "E:\\tech_analysis\\py\\model\\linearModelPrediction.dat";
+        String prefilePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/linearModelPrediction.dat";
         HashMap<String, Long> prediction = new HashMap<String, Long>();
         BufferedReader bufferedReader = null;
         try {

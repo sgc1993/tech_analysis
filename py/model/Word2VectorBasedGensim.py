@@ -74,6 +74,7 @@ def loadModel():
 def predict(model,word):
 	res = model.most_similar([word],topn=5)
 	# ans = [key[0].encode(encoding='GBK') for key in res]
+	# ans = [key[0].encode(encoding='UTF-8') for key in res]
 	ans = [key[0] for key in res]
 	return ans
 
@@ -151,6 +152,7 @@ def test():
 	# print(predict(model,'能源管理'))
 	# for key in predict(model,'卫星通信'):
 	# 	print(key.decode(encoding='GBK'))
+	# 	print(key.decode(encoding='UTF-8'))
 	# print(predict(model,'人工智能'))
 	# getVec(model,'卫星通信')
 def forJava():
