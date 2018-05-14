@@ -11,7 +11,9 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Administrator on 2018/3/21 0021.
@@ -23,9 +25,8 @@ public class EnterpriseDao {
 
     public String getEnterpriseNameById(String id) {
 
-        String sql = "SELECT name FROM EnterpriseInfo WHERE id = ?";
-        RowMapper<String> rowMapper = new BeanPropertyRowMapper<>(String.class);
-        String name = jdbcTemplate.queryForObject(sql, rowMapper, id);
+        String sql = String.format("SELECT name FROM EnterpriseInfo WHERE id = '%s'",id);
+        String name = jdbcTemplate.queryForObject(sql,String.class);
         return name;
     }
 
@@ -109,6 +110,129 @@ public class EnterpriseDao {
     }
 
     public void updateCompanyAlias(int companyId,String aliasName){
-        jdbcTemplate.update(String.format("INSERT INTO CompanyAlias VALUES(%d,'%s')",companyId,aliasName));
+        try{
+            jdbcTemplate.update(String.format("INSERT INTO CompanyAlias VALUES(%d,'%s')",companyId,aliasName));
+        }catch(Exception e){
+
+        }finally{
+
+        }
+    }
+
+    public List<String> getAllEnterpriseIdList(){
+        String sql = "select id from EnterpriseInfo";
+        List<String> idList = jdbcTemplate.query(sql, new RowMapper<String>(){
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String id = rs.getString("id");
+                return id;
+            }
+        });
+        return idList;
+    }
+
+    public List<String> getKeywordsByEnterpriseId(String enterpriseId){
+        String sql = String.format("SELECT keywords from expert where id in (select p.expertid from Expert2Enterprise p inner join EnterpriseInfo e on e.id = p.enterpriseid where e.id = %s)", enterpriseId);
+
+        List<String> keywordsList = jdbcTemplate.query(sql, new RowMapper<String>(){
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String keywords = rs.getString("keywords");
+                return keywords;
+            }
+        });
+        return keywordsList;
+    }
+
+    public void putKeywordByEnterpriseId(String expertId,String keywords){
+        jdbcTemplate.update(String.format("update EnterpriseInfo set keywords = '%s' where id = '%s'",keywords,expertId));
+    }
+
+
+    /**
+     * @param enterpriseName
+     * @param enterpriseNameInTable
+     * @return 获取待匹配企业别名和基准企业的同名员工个数
+     */
+    public int getConWorkerNums(String enterpriseName, String enterpriseNameInTable){
+        String sql = String.format("select count(*) from (select display_name from author where uid in (SELECT uid" +
+                "  FROM AddressTemp where organization = '%s')) as a inner join" +
+                "( SELECT name " +
+                "  FROM Expert where id in(SELECT expertid" +
+                "  FROM Expert2Enterprise where enterpriseid in (SELECT id" +
+                "  FROM EnterpriseInfo where name = '%s'))) as b on a.display_name = b.name",enterpriseName,enterpriseNameInTable);
+        List<Integer> res = jdbcTemplate.query(sql, new RowMapper<Integer>() {
+            @Override
+            public Integer mapRow(ResultSet resultSet, int i) throws SQLException {
+                return resultSet.getInt(1);
+            }
+        });
+        return res.get(0);
+    }
+
+
+    /**
+     * @param aliasname
+     * @return  根据待匹配企业别名去表中查询是否已经被匹配过
+     */
+    public List<Enterprise> getEnterpriseByAliasname(String aliasname){
+        String sql = String.format("select name,chuziqiye,zhuceziben,hangye,zhuceriqi,code,type,zuzhixingshi,level,zhucedi,id from EnterpriseInfo where id in (SELECT distinct companyid\n" +
+                "  FROM CompanyAlias where aliasname = '%s')",aliasname);
+        List<Enterprise> list =  (List<Enterprise>) jdbcTemplate.query(sql, new RowMapper<Enterprise>(){
+
+            @Override
+            public Enterprise mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Enterprise enterprise = new Enterprise();
+                enterprise.setName(rs.getString("name"));
+                enterprise.setChuziqiye(rs.getString("chuziqiye"));
+                enterprise.setZhuceziben(rs.getString("zhuceziben"));
+                enterprise.setHangye(rs.getString("hangye"));
+                enterprise.setZhuceriqi(rs.getString("zhuceriqi"));
+                enterprise.setCode(rs.getString("code"));
+                enterprise.setType(rs.getString("type"));
+                enterprise.setZuzhixingshi(rs.getString("zuzhixingshi"));
+                enterprise.setLevel(rs.getString("level"));
+                enterprise.setZhucedi(rs.getString("zhucedi"));
+                enterprise.setId(rs.getString("id"));
+
+                return enterprise;
+            }
+
+        });
+        return list;
+    }
+
+    public Map<Enterprise,String> getEnterpriseWorkers(){
+        String sql = "SELECT distinct name,chuziqiye,zhuceziben,hangye,zhuceriqi,code,type,zuzhixingshi,level,zhucedi, id,\n" +
+                "(SELECT expertname+',' FROM  (select  e.name,chuziqiye,zhuceziben,hangye,zhuceriqi,code,type,zuzhixingshi,level,zhucedi,id,e2n.name as expertname from enterpriseInfo as e inner join (select Expert2Enterprise.enterpriseid,  Expert.name  from Expert2Enterprise inner join Expert on Expert.id = Expert2Enterprise.expertid) as e2n on e.id = e2n.enterpriseid )B\n" +
+                "  \n" +
+                "  WHERE B.id=A.id\n" +
+                "  order by expertname \n" +
+                "  FOR XML PATH('')) AS expertname  \n" +
+                "FROM (select  e.name,chuziqiye,zhuceziben,hangye,zhuceriqi,code,type,zuzhixingshi,level,zhucedi,id,e2n.name as expertname from enterpriseInfo as e inner join (select Expert2Enterprise.enterpriseid,  Expert.name  from Expert2Enterprise inner join Expert on Expert.id = Expert2Enterprise.expertid) as e2n on e.id = e2n.enterpriseid  \n" +
+                ") A";
+        Map<Enterprise,String> enterpriseWithExpert = new HashMap<>();
+        List<Enterprise> list =  (List<Enterprise>) jdbcTemplate.query(sql, new RowMapper<Enterprise>(){
+
+            @Override
+            public Enterprise mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Enterprise enterprise = new Enterprise();
+                enterprise.setName(rs.getString("name"));
+                enterprise.setChuziqiye(rs.getString("chuziqiye"));
+                enterprise.setZhuceziben(rs.getString("zhuceziben"));
+                enterprise.setHangye(rs.getString("hangye"));
+                enterprise.setZhuceriqi(rs.getString("zhuceriqi"));
+                enterprise.setCode(rs.getString("code"));
+                enterprise.setType(rs.getString("type"));
+                enterprise.setZuzhixingshi(rs.getString("zuzhixingshi"));
+                enterprise.setLevel(rs.getString("level"));
+                enterprise.setZhucedi(rs.getString("zhucedi"));
+                enterprise.setId(rs.getString("id"));
+                enterpriseWithExpert.put(enterprise,rs.getString("expertname"));
+                return enterprise;
+            }
+
+        });
+        return enterpriseWithExpert;
     }
 }

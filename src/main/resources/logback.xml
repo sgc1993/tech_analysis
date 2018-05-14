@@ -26,11 +26,27 @@
     </appender>
 
 
-    <appender name="YXJ"
+    <appender name="YXJYANGQI"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/yxj_info.log</file>
+        <file>logs/yxj_yangqi_info.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/yxj_info.%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <fileNamePattern>logs/yxj_yangqi_info.%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>50MB</MaxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="YXJPAPER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/yxj_paper_info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/yxj_paper_info.%d{yyyy-MM-dd}-%i.log</fileNamePattern>
             <maxHistory>30</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -63,8 +79,12 @@
         <appender-ref ref="SGC" />
     </logger>
 
-    <logger name="yxj" level="info" additivity="false">
-        <appender-ref ref="YXJ" />
+    <logger name="yxjyangqi" level="info" additivity="false">
+        <appender-ref ref="YXJYANGQI" />
+    </logger>
+
+    <logger name="yxjpaper" level="info" additivity="false">
+        <appender-ref ref="YXJPAPER" />
     </logger>
 
     <logger name="xcy" level="info" additivity="false">
@@ -72,7 +92,7 @@
     </logger>
 
     <!-- 日志级别 -->
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
 
