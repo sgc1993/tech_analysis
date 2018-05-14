@@ -14,6 +14,7 @@ import java.io.IOException;
  */
 
 @Service
+
 public class DealDataService {
     @Autowired
     private LoadWordAndVector loadWordAndVector;

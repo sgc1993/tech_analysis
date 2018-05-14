@@ -2,11 +2,11 @@ package com.tech.analysis.Dao;
 
 import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Str;
 import org.neo4j.driver.v1.*;
-import org.python.core.Py;
-import org.python.core.PyFunction;
-import org.python.core.PyInteger;
-import org.python.core.PyObject;
-import org.python.util.PythonInterpreter;
+//import org.python.core.Py;
+//import org.python.core.PyFunction;
+//import org.python.core.PyInteger;
+//import org.python.core.PyObject;
+//import org.python.util.PythonInterpreter;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -18,9 +18,51 @@ import static org.neo4j.driver.v1.Values.parameters;
 //import org
 public class test {
 
+    public void test(){
+        try {
+            System.out.println("Starting .....");
+//            String[] parm = new String[] { "D:\\Python35\\python.exe",
+//                    "E:\\tech_analysis\\py\\model\\Line_Prediction.py"};
+//            String[] parm = new String[] { "/usr/bin/python3",
+//                    "/home/zhzy/Downloads/xcy/tech_analysis/py/model/t.py"};
+            String[] parm = new String[] { "/usr/neo4j3.1.0/bin/neo4j",
+                    "start"};
+//            String[] parm = new String[] { "rm",
+//                    "/home/zhzy/Downloads/xcy/tech_analysis/py/model/rm.txt"};
+//            String[] parm = new String[] { "unzip",
+//                    "-d", "/home/zhzy/Downloads/xcy/temp/", "/home/zhzy/Downloads/xcy/test.txt.zip"};
+
+            Process pr = Runtime.getRuntime().exec(parm);
+            pr.waitFor();
+            BufferedReader in = new BufferedReader(new
+                    InputStreamReader(pr.getInputStream()));
+            String line;
+            while ((line = in.readLine()) != null) {
+                System.out.println(line);
+            }
+            in.close();
+            pr.waitFor();
+            System.out.println("End .....");
+        }catch (Exception e){
+            System.out.println("调用LearnLinerModel训练模型失败！");
+        }
+    }
+
     public static void main(String[] args){
-        String string = "卫星通信2011";
-        System.out.println(string.substring(0,string.length()-4));
+
+        test t = new test();
+        t.test();
+//        System.out.println("gffhgfh");
+//        KeywordsPrediction keywordsPrediction = new KeywordsPrediction();
+//        keywordsPrediction.predict();
+
+//        HashMap<String, Long> yearKeywordTimes = new HashMap<String, Long>();
+//        yearKeywordTimes = UtilRead.readYearKeywordTimes();
+//        System.out.print(yearKeywordTimes.size());
+
+
+//        String string = "卫星通信2011";
+//        System.out.println(string.substring(0,string.length()-4));
 //        WordModel wordModel = new WordModel();
 //        System.out.println(wordModel.wordMap.size());
 //        List<String> list = wordModel.distance("卫星通信");
