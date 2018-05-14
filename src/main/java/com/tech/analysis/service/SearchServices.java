@@ -27,11 +27,6 @@ public class SearchServices
 
     public static JsonObject searchYangqi(String[] keywords)
     {//
-
-
-
-
-
         WordModel get_word=new WordModel();
         List<String> list = new ArrayList<String>();
         JsonObject obj=new JsonObject();
@@ -47,6 +42,7 @@ public class SearchServices
 
         len=keywords.length;
 //        len=2;
+
         for (String str:keywords)
         {
             list.add(str);
