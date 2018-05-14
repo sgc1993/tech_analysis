@@ -1,8 +1,13 @@
 package com.tech.analysis.Dao;
 
+import com.hankcs.hanlp.HanLP;
 import com.tech.analysis.entity.AddressTemp;
+import com.tech.analysis.entity.UidText;
 import org.neo4j.cypher.internal.frontend.v2_3.ast.Add;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -20,6 +25,7 @@ public class PaperDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    private Logger logger = LoggerFactory.getLogger("sgc");
 
     /**
      * @param name 根据机构名字去AddressTemp表中找到论文对应UID
@@ -156,5 +162,131 @@ public class PaperDao {
         jdbcTemplate.update(String.format("delete from %s where companyid = %d and organization = '%s'",table,companyid,aliasName));
     }
 
+    public List<String> getUidList(){
+        String sql = "select uid from Paper where has_keywords = 0";
+        List<String> uidList = jdbcTemplate.query(sql, new RowMapper<String>(){
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String name = rs.getString("uid");
+                return name;
+            }
+        });
+        return uidList;
+    }
 
+    public void updatePaperKeywordsByUid(String uid){
+        String sql = String.format("select abstract_text_cn from Paper where uid = '%s'", uid);
+
+        try{
+            List<String> abstractList = jdbcTemplate.query(sql, new RowMapper<String>(){
+                @Override
+                public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getString("abstract_text_cn");
+                }
+            });
+            String text = abstractList.get(0);
+            if(text == null){
+                jdbcTemplate.update(String.format("update Paper set has_keywords = 1 where uid = '%s'",uid));
+                return;
+            }
+            List<String> phraseList = HanLP.extractPhrase(text, 5);
+            String keywords = "";
+            for (String phrase : phraseList) {
+                keywords = keywords + phrase + " ";
+            }
+            keywords = keywords.trim();
+            jdbcTemplate.update(String.format("update Paper set keywords = '%s',has_keywords = 1 where UID = '%s'",keywords,uid));
+        }catch(Exception e){
+            logger.error(e.toString());
+            return;
+        }finally {
+
+        }
+    }
+
+    public List<UidText> getForKeywords(){
+        String sql = String.format("select TOP 10000 uid,abstract_text_cn,keywords_cn from PaperTemp where has_keywords = 0");
+        List<UidText> uidTextList = jdbcTemplate.query(sql, new RowMapper<UidText>() {
+            @Override
+            public UidText mapRow(ResultSet rs, int i) throws SQLException {
+                UidText ut = new UidText();
+                ut.setUid(rs.getString("uid"));
+                ut.setText(rs.getString("abstract_text_cn"));
+                ut.setKeywords(rs.getString("keywords_cn"));
+                return ut;
+            }
+        });
+        return uidTextList;
+    }
+
+    public void updateKeyphraseForPaper(){
+        List<UidText> uidTexts = getForKeywords();
+        while(uidTexts.size() > 0){
+            System.out.println(uidTexts.size());
+            int num = 1;
+            for(UidText ut : uidTexts){
+                if((num++)%1000==0)System.out.println("----------------------- "+num+" ----------------------");
+                if(ut.getText()==null)ut.setText("");
+                else{
+                    List<String> phraseList = HanLP.extractPhrase(ut.getText(),5);
+                    String keywords = "";
+                    for (String phrase : phraseList) {
+                        keywords = keywords + phrase + " ";
+                    }
+                    if(ut.getKeywords()!=null){
+                        String[] keywordsOfPaper = ut.getKeywords().split(",");
+                        for (String keyword : keywordsOfPaper) {
+                            keywords = keywords + keyword + " ";
+                        }
+                    }
+
+                    keywords = keywords.trim();
+                    ut.setText(keywords);
+                }
+            }
+            String sql="insert into paperTemp1 (uid,keywords)" +
+                    " values";
+            int time = 0;
+            long startTime=System.currentTimeMillis();   //获取开始时间
+            for(UidText ut : uidTexts){
+//            num--;
+//            if(num == 2)break;
+                if(time<999){
+                    sql += String.format("('%s','%s'),",ut.getUid(),ut.getText().replace("'","''"));
+                    time++;
+                }else{
+                    sql += String.format("('%s','%s'),",ut.getUid(),ut.getText().replace("'","''"));
+                    sql = sql.substring(0,sql.length()-1);
+                    jdbcTemplate.update(sql);
+                    sql = "insert into paperTemp1 (uid,keywords)" +
+                            " values";
+                    time = 0;
+                }
+            }
+            if(time>0){
+                sql = sql.substring(0,sql.length()-1);
+                jdbcTemplate.update(sql);
+            }
+
+            long endTime=System.currentTimeMillis(); //获取结束时间
+
+            System.out.println("程序运行时间： "+(endTime-startTime)+"ms");
+
+            jdbcTemplate.update("update paperTemp set paperTemp.keywords = paperTemp1.keywords, paperTemp.has_keywords = 1 from paperTemp1 where paperTemp.uid=paperTemp1.uid");
+            jdbcTemplate.update("delete from paperTemp1");
+            uidTexts = getForKeywords();
+        }
+    }
+
+    public List<String> getWorksByOrgnazationName(String organization){
+        String sql = String.format("select display_name from author where uid in (SELECT uid" +
+                "  FROM AddressTemp where organization = '%s') and full_address like '%%%s%%'",organization,organization);
+        List<String> workers = jdbcTemplate.query(sql, new RowMapper<String>() {
+            @Override
+            public String mapRow(ResultSet rs, int i) throws SQLException {
+                return rs.getString("display_name");
+            }
+        });
+        return workers;
+    }
 }

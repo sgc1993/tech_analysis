@@ -1,10 +1,7 @@
 package com.tech.analysis.service;
 
 import com.sun.xml.internal.bind.v2.runtime.output.Encoded;
-import com.tech.analysis.Dao.EnterpriseDao;
-import com.tech.analysis.Dao.MatchDao;
-import com.tech.analysis.Dao.PaperDao;
-import com.tech.analysis.Dao.PatentDao;
+import com.tech.analysis.Dao.*;
 import com.tech.analysis.entity.AddressTemp;
 import com.tech.analysis.entity.Enterprise;
 import com.tech.analysis.entity.PatentIdAndEnterpriseNames;
@@ -35,6 +32,12 @@ public class MatchService {
     private PatentDao patentDao;
     @Autowired
     private MatchUtil matchUtil;
+    @Autowired
+    private AuthorDao authorDao;
+    @Autowired
+    private ExpertDao expertDao;
+    @Autowired
+    private Expert2EnterpriseDao expert2EnterpriseDao;
 
 
     /**
@@ -42,14 +45,50 @@ public class MatchService {
      * @return 企业实体列表
      */
     public List<Enterprise> getEnterpriseListOfSimilarName(String enterpriseName,String source){
-
         List<Enterprise> list = new ArrayList<>();
-        //获得所有企业实体
+        // （New） 不论待匹配项来源于哪，需要去匹配表中检测，如果已经被匹配过了，直接放回匹配结果
+        List<Enterprise> enterpriseHasBeenMatched = enterpriseDao.getEnterpriseByAliasname(enterpriseName);
+        if(enterpriseHasBeenMatched.size() > 0)return enterpriseHasBeenMatched;
+        //获得所有基准企业实体
         List<Enterprise> enterpriseList = enterpriseDao.getAllEnterpriseList();
         //如果该机构名称是汉语的
         if(matchUtil.isChinese(enterpriseName)){
             //将所有企业列表和该企业名传进去，返回所有和该企业名相似的企业列表
             list = matchUtil.getSimEnterpriseList(enterpriseName,enterpriseList);
+            //  (New) 按工作人员进行匹配得出的相似企业列表
+            Map<Enterprise,Integer> simEnterpriseAndWeight = new HashMap<>();
+            Map<Enterprise,String> enterpriseWithExpert =  enterpriseDao.getEnterpriseWorkers();
+            //获取待匹配机构的工作人员
+            List<String> theWokers = new ArrayList<>();
+            if(source.equals("paper")){
+                theWokers = paperDao.getWorksByOrgnazationName(enterpriseName);
+            }else if(source.equals("patent")){
+
+            }
+            for (Map.Entry<Enterprise,String> entry : enterpriseWithExpert.entrySet()) {
+                int num = 0;
+                String workers = entry.getValue();
+                for (String worker : theWokers) {
+                    if(workers.indexOf(worker)!=-1)
+                        num++;
+                }
+                //当与某个机构共有的员工数量是这个带匹配机构员工数量的一定比例时，判断为可能别名机构
+                if(num > theWokers.size()/3) simEnterpriseAndWeight.put(entry.getKey(),num);
+            }
+            //将按名字字符串匹配得到的相似机构，按相同工作人员个数为5的权值加入，用于统一排序
+            for (Enterprise enterprise : list) {
+                simEnterpriseAndWeight.put(enterprise,simEnterpriseAndWeight.getOrDefault(enterprise,0)+5);
+            }
+            List<Map.Entry<Enterprise,Integer>> sortList = new ArrayList<>();
+            sortList.addAll(simEnterpriseAndWeight.entrySet());
+            ValueComparator vc = new ValueComparator();
+            Collections.sort(sortList,vc);
+            List<Enterprise> resultList = new ArrayList<>();
+            for(Map.Entry<Enterprise,Integer> entry : sortList){
+                resultList.add(entry.getKey());
+            }
+            return resultList;
+
         }else if(source.equals("paper")){//机构名是英语的情况,一般出现在paper中
             //创建一个队列，用于存放该英文机构对应的可能中文机构
             List<String> maybeChineseNameList = new ArrayList<>();
@@ -133,15 +172,45 @@ public class MatchService {
     public void updatePaper(int companyId,String aliasName){
         //1、根据organization==aliasName去AddressTemp表中匹配出该机构的所有论文List<Address>
         List<AddressTemp> addressTemps = paperDao.getAddressTempsByName(aliasName);
+
         //3、将AddressTemp和companyid插入Address表中
         updateAddress(companyId,addressTemps);
+
         //4、将AddressTemp中对应aliasName记录删除
         paperDao.deleteItemInAddressTempByOrganization(aliasName);
+
         //5、向CompanyAlias中插入企业别名和对应companyid
         enterpriseDao.updateCompanyAlias(companyId,aliasName);
+
         //注意他的数据库里id字段不是自增的
         //往匹配记录表MatchRecord里记录匹配数据，以备后序撤销匹配操作
         matchDao.updateMatchRecord(companyId,aliasName,"paper");
+        //updateExpertInPaper(companyId,aliasName);
+    }
+
+    @Transactional
+    public List<String> updateExpertInPaper(int companyId,String aliasName){
+        //0.获取companyI对应的企业name
+        String enterpriseName = enterpriseDao.getEnterpriseNameById(String.valueOf(companyId));
+
+        //1.去AuthorTemp中取出所有full_address为aliasName的作者名list<display_name>
+        List<String> displayNameList = authorDao.getDisplayNameListByFullAddress(aliasName);
+
+        //2.以enterprisename和display_name为主键插入Expert表中,newExpertIdList记录新插入的专家的id可以用于回滚
+        List<String> newExpertIdList = expertDao.insertByEnterpriseNameAndName(enterpriseName,displayNameList);
+
+        //3.以enterprisename和display_name查询expertid插入Author中
+        List<String> expertIdList = new ArrayList<>();
+        for (String name : displayNameList) {
+            expertIdList.add(expertDao.getExpertIdByNameAndEnterpriseName(name,enterpriseName));
+        }
+        authorDao.insertFromAuthorTemp(aliasName);
+        authorDao.deleteFormAuthorTemp(aliasName);
+
+        //4.插入expert2enterprise
+        expert2EnterpriseDao.insertByExpertIdAndEnterpriseId(String.valueOf(companyId),expertIdList);
+        //可以记录新插入的专家Id,用于回滚
+        return newExpertIdList;
     }
 
     /**
@@ -274,4 +343,12 @@ public class MatchService {
         matchDao.updateMatchRecord(companyId,aliasName,"patent");
     }
 
+
+    private  class ValueComparator implements Comparator<Map.Entry<Enterprise,Integer>>
+    {
+        public int compare(Map.Entry<Enterprise,Integer> m,Map.Entry<Enterprise,Integer> n)
+        {
+            return n.getValue()-m.getValue();
+        }
+    }
 }
