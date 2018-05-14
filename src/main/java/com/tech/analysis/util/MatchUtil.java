@@ -128,10 +128,17 @@ public class MatchUtil {
         int index2 = name2.indexOf("十");
         String a = "";
         String b = "";
+
+        String c = "";
+        String d = "";
         if(index1!=-1 && index2!=-1){
             a = String.valueOf(name1.charAt(index1+1));
             b = String.valueOf(name2.charAt(index2+1));
-            return a.equals(b);
+            if(index1>0&&index2>0){
+                c = String.valueOf(name1.charAt(index1-1));
+                d = String.valueOf(name2.charAt(index2-1));
+            }
+            return a.equals(b)&&c.equals(d);
         }
         return true;
     }
