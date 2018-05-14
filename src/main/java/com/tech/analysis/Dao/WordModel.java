@@ -11,6 +11,7 @@ public class WordModel {
     /**
      * 载入模型 HashMap<String, double[]>
      * @return HashMap<String, double[]>
+     *     /////
      */
     HashMap<String, double[]> wordMap  = loadModel();
     private int topNSize = 6;
