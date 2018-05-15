@@ -13,8 +13,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 public class TechAnalysisApplication {
 
-	public static void main(String[] args) {//项目入口
-		SpringApplication.run(TechAnalysisApplication.class, args);//开启自动配置
+	public static void main(String[] args) {
+		SpringApplication.run(TechAnalysisApplication.class, args);
 	}
 //dtestda
 //	@Autowired

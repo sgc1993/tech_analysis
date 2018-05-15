@@ -39,6 +39,9 @@ public class MatchService {
     @Autowired
     private Expert2EnterpriseDao expert2EnterpriseDao;
 
+    Map<Enterprise,String> enterpriseWithExpert;
+    List<Enterprise> enterpriseList;
+
 
     /**
      * @param enterpriseName 根据一个企业名称，获取和其可能对应的机构信息
@@ -49,18 +52,21 @@ public class MatchService {
         // （New） 不论待匹配项来源于哪，需要去匹配表中检测，如果已经被匹配过了，直接放回匹配结果
         List<Enterprise> enterpriseHasBeenMatched = enterpriseDao.getEnterpriseByAliasname(enterpriseName);
         if(enterpriseHasBeenMatched.size() > 0)return enterpriseHasBeenMatched;
-        //获得所有基准企业实体
-        List<Enterprise> enterpriseList = enterpriseDao.getAllEnterpriseList();
+        //获得所有基准企业实体,（写成成员变量可以防止每次调用方法都加载一遍，这样只需要第一次使用时加载）
+        //List<Enterprise> enterpriseList = enterpriseDao.getAllEnterpriseList();
+        if(enterpriseList == null)enterpriseList = enterpriseDao.getAllEnterpriseList();
         //如果该机构名称是汉语的
         if(matchUtil.isChinese(enterpriseName)){
             //将所有企业列表和该企业名传进去，返回所有和该企业名相似的企业列表
             list = matchUtil.getSimEnterpriseList(enterpriseName,enterpriseList);
             //  (New) 按工作人员进行匹配得出的相似企业列表
             Map<Enterprise,Integer> simEnterpriseAndWeight = new HashMap<>();
-            Map<Enterprise,String> enterpriseWithExpert =  enterpriseDao.getEnterpriseWorkers();
-            //获取待匹配机构的工作人员
+            //Map<Enterprise,String> enterpriseWithExpert =  enterpriseDao.getEnterpriseWorkers();
+            if(enterpriseWithExpert == null)enterpriseWithExpert =  enterpriseDao.getEnterpriseWorkers();
+            //待匹配机构的工作人员
             List<String> theWokers = new ArrayList<>();
             if(source.equals("paper")){
+                //获取待匹配机构的工作人员
                 theWokers = paperDao.getWorksByOrgnazationName(enterpriseName);
             }else if(source.equals("patent")){
 

@@ -40,6 +40,7 @@ public class MatchController {
 //        return  list;
 //    }
 
+
     @RequestMapping("/testLog") //提供路由信息，”/“路径的HTTP Request都会被映射到sayHello方法进行处理。
     public String sayHello(){
 
