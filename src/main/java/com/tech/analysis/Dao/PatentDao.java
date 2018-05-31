@@ -2,6 +2,7 @@ package com.tech.analysis.Dao;
 
 import com.hankcs.hanlp.HanLP;
 import com.tech.analysis.entity.AddressTemp;
+import com.tech.analysis.entity.Expert;
 import com.tech.analysis.entity.PatentIdAndEnterpriseNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,7 @@ public class PatentDao {
     }
 
     public List<String> getEnterpriseIdListByPatentId(String patentId){
-        String sql = "select enterpriseid from Patent2EnterpriseNew where patentid = ?";
+        String sql = "select enterpriseid from Patent2Enterprise where patentid = ?";
         List<String> list = jdbcTemplate.query(sql, new RowMapper<String>(){
             @Override
             public String mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -123,7 +124,7 @@ public class PatentDao {
             });
             String text = abstractList.get(0);
             if(text == null){
-                jdbcTemplate.update(String.format("update Patent set has_keywords = 1 where id = '%s'",id));
+                jdbcTemplate.update(String.format("update Patent set has_keywords = 10 where id = '%s'",id));
                 return;
             }
             List<String> phraseList = HanLP.extractPhrase(text, 8);
@@ -132,13 +133,59 @@ public class PatentDao {
                 keywords = keywords + phrase + " ";
             }
             keywords = keywords.trim();
-            jdbcTemplate.update(String.format("update Patent set keywords = '%s',has_keywords = 1 where id = '%s'",keywords,id));
+            jdbcTemplate.update(String.format("update Patent set keywords = '%s',has_keywords = 10 where id = '%s'",keywords,id));
         }catch(Exception e){
             logger.error(e.toString());
             return;
         }finally {
 
         }
+    }
+
+    public void insertNewPatent2Enterprise(){
+        String sql = "insert into Patent2Enterprise(patentid,enterpriseid) select patentid,companyid from patentForMatch a inner join CompanyAlias b on a.enterpriseName = b.aliasname";
+        jdbcTemplate.update(sql);
+    }
+
+    public List<Expert> getExpertPreMatch(){
+        String sql = "select distinct inventors_first as expertname,d.enterpriseName,d.companyid from patent c inner join (select distinct enterpriseName,patentid,companyid from patentForMatch a inner join CompanyAlias b on a.enterpriseName = b.aliasname) d on c.id = d.patentid and  c.enterprisename_first = d.enterpriseName ";
+        List<Expert> list = new ArrayList<>();
+        list = jdbcTemplate.query(sql, new RowMapper<Expert>() {
+            @Override
+            public Expert mapRow(ResultSet rs, int i) throws SQLException {
+                Expert e = new Expert();
+                e.setName(rs.getString("expertname"));
+                e.setEnterpriseName(rs.getString("enterprisename"));
+                e.setEnterpriseId(rs.getString("companyid"));
+                return e;
+            }
+        });
+        return list;
+    }
+
+    public void insertNewPatent2Expert(){
+        String sql = "insert into Patent2Expert select patentid,e.id from Expert e inner join (select inventors_first,d.enterpriseName,d.patentid from patent c inner join (select enterpriseName,patentid,companyid from patentForMatch a inner join CompanyAlias b on a.enterpriseName = b.aliasname) d on c.id = d.patentid and  c.enterprisename_first = d.enterpriseName) f on e.name = f.inventors_first and e.enterprisename = f.enterpriseName";
+        jdbcTemplate.update(sql);
+    }
+
+    public void deleteItemInPatentForMatch(){
+        String sql = "delete from patentForMatch where id in (select a.id from patentForMatch a inner join CompanyAlias b on a.enterpriseName = b.aliasname)\n" +
+                "delete from patentForMatchBackup where id in (select a.id from patentForMatchBackup a inner join CompanyAlias b on a.enterpriseName = b.aliasname)";
+        jdbcTemplate.update(sql);
+    }
+
+    public void insertNewEnterpriseFromPatentForMatch(){
+        String sql = "insert into EnterpriseInfo(name,enterprisetype) SELECT distinct enterprisename,1\n" +
+                "  FROM patentForMatch";
+        try{
+            jdbcTemplate.update(sql);
+        }catch(Exception e){
+            System.out.println("++++++++++++Patent 插入专家失败++++++++++++++++");
+        }
+    }
+    public void insertNewCompanyAlias(){
+        String sql = "insert into CompanyAlias (aliasname,companyid) select distinct enterprisename,a.id from EnterpriseInfo a inner join PatentForMatch b on a.name = b.enterprisename";
+        jdbcTemplate.update(sql);
     }
 }
 

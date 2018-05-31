@@ -190,7 +190,7 @@ public class PaperDao {
             });
             String text = abstractList.get(0);
             if(text == null){
-                jdbcTemplate.update(String.format("update Paper set has_keywords = 1 where uid = '%s'",uid));
+                jdbcTemplate.update(String.format("update Paper set has_keywords = 10 where uid = '%s'",uid));
                 return;
             }
             List<String> phraseList = HanLP.extractPhrase(text, 5);
@@ -199,7 +199,7 @@ public class PaperDao {
                 keywords = keywords + phrase + " ";
             }
             keywords = keywords.trim();
-            jdbcTemplate.update(String.format("update Paper set keywords = '%s',has_keywords = 1 where UID = '%s'",keywords,uid));
+            jdbcTemplate.update(String.format("update Paper set keywords = '%s',has_keywords = 10 where UID = '%s'",keywords,uid));
         }catch(Exception e){
             logger.error(e.toString());
             return;
@@ -209,7 +209,7 @@ public class PaperDao {
     }
 
     public List<UidText> getForKeywords(){
-        String sql = String.format("select TOP 10000 uid,abstract_text_cn,keywords_cn from Papertest where has_keywords = 0");
+        String sql = String.format("select TOP 10000 uid,abstract_text_cn,keywords_cn from Paper where has_keywords = 0");
         List<UidText> uidTextList = jdbcTemplate.query(sql, new RowMapper<UidText>() {
             @Override
             public UidText mapRow(ResultSet rs, int i) throws SQLException {
@@ -279,7 +279,7 @@ public class PaperDao {
 
             System.out.println("程序运行时间： "+(endTime-startTime)+"ms");
 
-            jdbcTemplate.update("update papertest set papertest.keywords = paperTemp1.keywords, paperTest.has_keywords = 1 from paperTemp1 where paperTest.uid=paperTemp1.uid");
+            jdbcTemplate.update("update paper set paper.keywords = paperTemp1.keywords, paper.has_keywords = 10 from paperTemp1 where paper.uid=paperTemp1.uid");
             jdbcTemplate.update("delete from paperTemp1");
             uidTexts = getForKeywords();
         }

@@ -179,9 +179,9 @@ public class MatchUtil {
 
     /**
      * @param string 将一个数字字符串转换成汉字字符串
-     * @return
+     * @return  15 -> 十五 301 -> 三百零一
      */
-    private String toChinese(String string) {
+    public String toChinese(String string) {
         String[] s1 = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九" };
         String[] s2 = { "十", "百", "千", "万", "十", "百", "千", "亿", "十", "百", "千" };
         String result = "";
@@ -195,6 +195,25 @@ public class MatchUtil {
             }
         }
         return result;
+    }
+
+
+    /**
+     * @param englishName
+     * @return  将英文名字翻译为中文名字
+     */
+    public String translationEnglishName(String englishName){
+        String chinenseName = "";
+        if(englishName.contains("China Electronics Technology")){
+            Pattern p = Pattern.compile("\\d+");
+            Matcher m = p.matcher(englishName);
+            String num = "";
+            if (m.find()) {
+                num = toChinese(m.group(0));
+            }
+            chinenseName = "中国电子科技集团公司第"+num+"研究所";
+        }
+        return chinenseName;
     }
 //    public static void main(String[] args){
 //        String enterpriseName = "中国电科集团公司13所";

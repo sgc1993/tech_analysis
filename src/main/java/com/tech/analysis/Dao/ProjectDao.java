@@ -50,7 +50,7 @@ public class ProjectDao {
             });
             Text text = textList.get(0);
             if(text.getContent()==null&&text.getAbstractStr()==null){
-                jdbcTemplate.update(String.format("update Project set has_keywords = 1 where id = '%s'",id));
+                jdbcTemplate.update(String.format("update Project set has_keywords = 10 where id = '%s'",id));
                 return;
             }
             String texts = text.getContent() + text.getAbstractStr();
@@ -60,7 +60,7 @@ public class ProjectDao {
                 keywords = keywords + phrase + " ";
             }
             keywords = keywords.trim();
-            jdbcTemplate.update(String.format("update Project set keywords = '%s',has_keywords = 1 where id = '%s'",keywords,id));
+            jdbcTemplate.update(String.format("update Project set keywords = '%s',has_keywords = 10 where id = '%s'",keywords,id));
         }catch(Exception e){
             logger.error(e.toString());
             return;

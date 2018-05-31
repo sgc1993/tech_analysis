@@ -2,12 +2,11 @@ package com.tech.analysis.service;
 
 import com.sun.xml.internal.bind.v2.runtime.output.Encoded;
 import com.tech.analysis.Dao.*;
-import com.tech.analysis.entity.AddressTemp;
-import com.tech.analysis.entity.Enterprise;
-import com.tech.analysis.entity.PatentIdAndEnterpriseNames;
+import com.tech.analysis.entity.*;
 import com.tech.analysis.util.MatchUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +37,11 @@ public class MatchService {
     private ExpertDao expertDao;
     @Autowired
     private Expert2EnterpriseDao expert2EnterpriseDao;
+    @Autowired
+    private AddressDao addressDao;
+    @Autowired
+    private PrizeDao prizeDao;
+
 
     Map<Enterprise,String> enterpriseWithExpert;
     List<Enterprise> enterpriseList;
@@ -96,6 +100,7 @@ public class MatchService {
             return resultList;
 
         }else if(source.equals("paper")){//机构名是英语的情况,一般出现在paper中
+
             //创建一个队列，用于存放该英文机构对应的可能中文机构
             List<String> maybeChineseNameList = new ArrayList<>();
             //在temp表中获取该英文机构的UID（可能不止一个，取一个即可包含）
@@ -114,13 +119,18 @@ public class MatchService {
                     maybeChineseNameList.add(name);
             }
             for (String name:maybeChineseNameList) {
-                List<Enterprise> alist = matchUtil.getSimEnterpriseList(name,enterpriseList);
+                //List<Enterprise> alist = matchUtil.getSimEnterpriseList(name,enterpriseList);
+                List<Enterprise> alist = getEnterpriseListOfSimilarName(name,"paper");
                 list.addAll(alist);
             }
             //对可能的多个中文名匹配的相似机构可能重复，去重
             HashSet<Enterprise> enterprisesSet = new HashSet<>(list);
             list.clear();
             list.addAll(enterprisesSet);
+            if(list.size() == 0){
+                String tanslationName = matchUtil.translationEnglishName(enterpriseName);
+                list = getEnterpriseListOfSimilarName(tanslationName,"paper");
+            }
         }
         return  list;
     }
@@ -191,7 +201,7 @@ public class MatchService {
         //注意他的数据库里id字段不是自增的
         //往匹配记录表MatchRecord里记录匹配数据，以备后序撤销匹配操作
         matchDao.updateMatchRecord(companyId,aliasName,"paper");
-        //updateExpertInPaper(companyId,aliasName);
+        updateExpertInPaper(companyId,aliasName);
     }
 
     @Transactional
@@ -217,6 +227,24 @@ public class MatchService {
         expert2EnterpriseDao.insertByExpertIdAndEnterpriseId(String.valueOf(companyId),expertIdList);
         //可以记录新插入的专家Id,用于回滚
         return newExpertIdList;
+    }
+
+
+    /**
+     * @param name
+     * @param source
+     */
+    @Transactional
+    public void insertNewEnterprise(String name,String source){
+        //插入新的企业进基准表
+        enterpriseDao.insertNewEnterprise(name);
+        Enterprise e = new Enterprise();
+        e.setName(name);
+        //添加到内存中
+        enterpriseList.add(e);
+        int id = enterpriseDao.getEnterpriseIdByName(name);
+        if(source.equals("paper"))updatePaper(id,name);
+        else if(source.equals("patent"))updatePatent(id,name);
     }
 
     /**
@@ -357,4 +385,105 @@ public class MatchService {
             return n.getValue()-m.getValue();
         }
     }
+
+
+    /**
+     * 新来的数据入库后，先将能对上的数据对上，新的数据都在temp中
+     */
+    @Transactional
+    public void preMatchPaper(){
+        //1.先将AddressTemp中的数据跟companyAlias对上，插入到Address中，即将论文数据的机构对上
+        addressDao.preMatchAddress();
+        //2.将AuthouTemp中的数据和Address的数据对上（uid和full_address），得到新论文数据中企业能被对上
+        // 的论文的作者信息，得到Author和对应企业id
+        List<Expert> preExpertList =  authorDao.getAuthorForNewExpertList();
+        //3.将Expert和expert2enterprise联合得到每个专家和企业id
+        List<Expert> expertList = expertDao.getExpertList();
+        //4.将所有2中得到的和3中得到的进行比较，新的插入Expert,Expert2Enterprise
+        preExpertList.removeAll(expertList);
+        //去重
+        HashSet<Expert> expertSet = new HashSet<>(preExpertList);
+        preExpertList.clear();
+        preExpertList.addAll(expertSet);
+        expertDao.insertNewExpert(preExpertList);
+        //5.将AuthorTemp和Expert联合查找，插入Author中，并删除AuthorTemp中的数据
+        authorDao.updateAuthorAndDeleteInTemp();
+    }
+
+    /**
+     *人工匹配之后，将无法匹配上的机构、直接在enterpriseInfo中新建
+     */
+    @Transactional
+    public void postMatchPaper(){
+        //1.从AddressTemp中取出所有机构名字，这些都是无法匹配的机构，建立为新的基准机构，即插入Enterprise中
+        addressDao.insertNewEnterpriseFromAddressTemp();
+        //2.插入CompanyAlias表
+        matchDao.insertNewCompanyAlias();
+        //3.重新执行preMatch
+        preMatchPaper();
+    }
+
+    /**
+     *在此之前已经生成patentForMatch    还需插入第一作者
+     */
+    @Transactional
+    public void preMatchPatent(){
+
+        //2、对patentForMatch表和companyAlias联合查找，找到可以直接对上的机构，插入patent2enterprise
+        patentDao.insertNewPatent2Enterprise();
+        //3、对于能对上的patent，找到对应id和机构名对应的专家，插入新的专家，删除patentForMatch中的项
+        List<Expert> preExpertList =  patentDao.getExpertPreMatch();
+        //拿到现有的专家
+        List<Expert> expertList = expertDao.getExpertList();
+        //去掉已经存在的，得到新的插入
+        preExpertList.removeAll(expertList);
+        //去重
+        HashSet<Expert> expertSet = new HashSet<>(preExpertList);
+        preExpertList.clear();
+        preExpertList.addAll(expertSet);
+        expertDao.insertNewExpert(preExpertList);
+        //插入新的专家之后将新的专家和专利对上
+        patentDao.insertNewPatent2Expert();
+        patentDao.deleteItemInPatentForMatch();
+    }
+    @Transactional
+    public void postMatchPatent(){
+        patentDao.insertNewEnterpriseFromPatentForMatch();
+        patentDao.insertNewCompanyAlias();
+        preMatchPatent();
+    }
+
+
+    /**
+     * 新进来的奖项，要同时抽出内容插入prizetemp表中，然后这边执行抽取出待匹配专利机构
+     * getPrizeForMatch() -> preMatchPrize() ->人工 —> postMatchPrize()
+     */
+    public void getPrizeForMatch(){
+        prizeDao.getPrizeForMatch();
+    }
+    @Transactional
+    public void preMatchPrize(){
+        //将能对上的先对上，对上后将prizetemp 和 prizeformatch 中的数据删除
+        prizeDao.insertNewPrize2Enterprise();
+    }
+    @Transactional
+    public void postMatchPrize(){
+        //将人工也对不上的企业插入EnterpriseInfo中
+        prizeDao.insertNewEnterpriseFromPrizeForMatch();
+        prizeDao.insertNewCompanyAlias();
+        preMatchPrize();
+    }
+
+
+    //总的更新口
+    @Transactional
+    public void whenDataUpdate(){
+        preMatchPrize();
+        postMatchPrize();
+        preMatchPatent();
+        postMatchPatent();
+        preMatchPaper();
+        postMatchPaper();
+    }
+
 }
