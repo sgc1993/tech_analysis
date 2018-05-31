@@ -1,4 +1,6 @@
 package com.tech.analysis.Dao;
+import com.tech.analysis.entity.KeywordEntity;
+import com.tech.analysis.entity.RelationshipEntity;
 import org.neo4j.driver.v1.*;
 import static org.neo4j.driver.v1.Values.parameters;
 import java.util.*;
@@ -13,6 +15,10 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class KeywordsDao {
+//    private static HashMap<String, Long> keywordTimes = UtilRead.readKeywordTimes();
+//    static {
+//        HashMap<String, Long> keywordTimes = UtilRead.readKeywordTimes();
+//    }
     /**
      * @param query 给定目标词
      * @return 目标词社区的字符串
@@ -20,53 +26,110 @@ public class KeywordsDao {
     public String getJsonString(String query){
         KeywordsDao keywordsDao = new KeywordsDao();
         HashMap<String,ArrayList<Integer>> data = keywordsDao.getData(query);
+//        System.out.println("dddddddddddddddddddddddddddddddddddddddddddddddddddddddd: " + data.size());
         return keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
     }
 
+
+//    /**
+//     * 用于划分包含年份的关键字网络
+//     */
+//    public void yearKeywordPartitionTwoDeepCommunity(){
+//        String[] strs = {"times","partitionKey"};
+//        for (String str : strs){
+//            System.out.println("Starting partition Community: " + str);
+//            keywordPartitionCommunity(str);
+//        }
+//    }
+
+//    /**
+//     * 用于划分关键字网络社区
+//     */
+//    public void keywordPartitionTwoDeepCommunity(){
+//        String[] strs = {"times","partitionKey"};
+//        for (String str : strs){
+//            System.out.println("Starting partition Community: " + str);
+//            keywordPartitionCommunity(str);
+//        }
+//    }
     /**
-     * 根据传入的参数划分社区
-     * @param partitionKey 划分社区依赖的属性
-     * CALL apoc.algo.community(25,['yearNewKeyword'],'partitionKey1','yearSimilar','OUTGOING','partitionKey',10000)
+     * CALL apoc.algo.community(50,['newKeywordKey'],'partitionKey','similarKey','OUTGOING','x',10000)
+     * CALL apoc.algo.community(50,['newKeywordKey'],'partitionKey1','similarKey','OUTGOING','partitionKey',10000)
+     * 根据传入的参数划分关键字社区
+     * CALL apoc.algo.community(25,['newKeyword'],'partitionKey','similar','OUTGOING','times',10000)
+     * CALL apoc.algo.community(25,['newKeyword'],'partitionKey1','similar','OUTGOING','partitionKey',10000)
      */
-    public void partitionCommunity(String partitionKey){
+    public void keywordPartitionCommunity(){
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
-        String order = "CALL apoc.algo.community(25,['Keyword'],'partitionKey','similar','OUTGOING','"+partitionKey+"',10000)";
-        connect.excute(order,parameters( "", "" ));
+        String order1 = "CALL apoc.algo.community(25,['newKeyword'],'partitionKey','similar','OUTGOING','times',10000)";
+        String order2 = "CALL apoc.algo.community(25,['newKeyword'],'partitionKey1','similar','OUTGOING','partitionKey',10000)";
+        connect.excute(order1,parameters( "", "" ));
+        connect.excute(order2,parameters( "", "" ));
         connect.closeConnect();
     }
 
+    /**
+     * 根据传入的参数划分包含年份的关键字社区
+     * MATCH (n:newKeyword) where n.partitionKey = 3219761 RETURN n.partitionKey,n.partitionKey1,n.name limit 1000
+     * CALL apoc.algo.community(25,['yearNewKeyword'],'partitionKey','yearSimilar','OUTGOING','times',10000)
+     * CALL apoc.algo.community(25,['yearNewKeyword'],'partitionKey1','yearSimilar','OUTGOING','partitionKey',10000)
+     */
+    public void yearKeywordPartitionCommunity(){
+        ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
+        String order1 = "CALL apoc.algo.community(25,['yearNewKeyword'],'partitionKey','yearSimilar','OUTGOING','times',10000)";
+        String order2 = "CALL apoc.algo.community(25,['yearNewKeyword'],'partitionKey1','yearSimilar','OUTGOING','partitionKey',10000)";
+        connect.excute(order1,parameters( "", "" ));
+        connect.excute(order2,parameters( "", "" ));
+        connect.closeConnect();
+    }
+
+//    /**
+//     * 新方法 用于返回社区结构图
+//     * @return
+//     */
+//    public HashMap<String,ArrayList<String>> getCommubityData(){
+//        HashMap<String,ArrayList<String>> data = new HashMap<String,ArrayList<String>>();
+//
+//    }
     /**
      * 返回 与该字符串处于同一级社区和下一级社区的节点
      * @param query 精确匹配的字符串
      * @return HashMap<String,ArrayList<Integer>>
      */
-    public HashMap<String,ArrayList<Integer>> getData(String query){
+    public static HashMap<String,ArrayList<Integer>> getData(String query){
         HashMap<String,ArrayList<Integer>> data = new HashMap<String,ArrayList<Integer>>();
+        int keyCount = 0;
         ConnectAndOperNeo4j connect = new ConnectAndOperNeo4j();
         StatementResult result;
         System.out.println(query.length());
         if (query.equals("\"\"")){
             result = connect.excute(
-                    "MATCH (n:Keyword) RETURN n.name AS name,n.weight AS weight," +
+//                    "MATCH (n:newKeyword) RETURN n.name AS name," +
+                    "MATCH (n:newKeywordKey) RETURN n.name AS name," +
                             "n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
         }else {
             System.out.println("else: "+ query);
             StatementResult result1 = connect.excute(
-                    "MATCH (n:Keyword) WHERE n.name = \"" + query +
+//                    "MATCH (n:newKeyword) WHERE n.name = \"" + query +
+                    "MATCH (n:newKeywordKey) WHERE n.name = \"" + query +
                             "\" return n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
             int firstCommunityNum = -1;
             try {
+                System.out.println(result1.hasNext());
                 Record recordFirst = result1.next();
                 firstCommunityNum = recordFirst.get("partitionKey").asInt();
+//                System.out.println("//////////////////////////////////////"+firstCommunityNum);
             }catch (Exception e){
                 System.out.println("获取节点所属第一社区失败!!!" + e);
                 return null;
             }
-            result = connect.excute(
-                    "MATCH (n:Keyword) WHERE n.partitionKey = "+ firstCommunityNum +
-                            " return n.name AS name,n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
+            result = connect.excute("MATCH (n:newKeywordKey) WHERE n.partitionKey =454662 " +
+                            "return n.name AS name,n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1,n.times AS times",
+//                    "MATCH (n:newKeyword) WHERE n.partitionKey = "+ firstCommunityNum +
+//                    "MATCH (n:newKeywordKey) WHERE n.partitionKey = "+ firstCommunityNum +
+//                            " return n.times AS times,n.name AS name,n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
         }
         int count = 0;
@@ -74,17 +137,31 @@ public class KeywordsDao {
         int bad = 0;
         while ( result.hasNext() )
         {
+
             ++count;
             Record record = result.next();
 //            System.out.println("partitionKey: " + record.get("partitionKey") + " " +
 //                    "partitionKey1: " + record.get("partitionKey1"));
             try {
+                if (keyCount > 200) {
+                    break;
+                }
+                int times = Integer.parseInt(record.get("times").asString());
+//                System.out.println(times);
+                if (times < 900) {
+                    continue;
+                }
+//                ++keyCount;
                 ArrayList<Integer> templist = new ArrayList<Integer>();
                 templist.add(record.get("partitionKey").asInt());
                 templist.add(record.get("partitionKey1").asInt());
+//                if (keywordTimes.get(record.get( "name" ).asString()) < 3)
+//                    continue;
+//                System.out.println(record.get( "name" ).asString()+"  "+ keywordTimes.get(record.get( "name" ).asString()));
                 data.put(record.get( "name" ).asString(),templist);
                 ++good;
             }catch (Exception e){
+                e.printStackTrace();
                 ++bad;
                 continue;
             }

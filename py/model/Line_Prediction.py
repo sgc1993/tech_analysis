@@ -21,8 +21,8 @@ def train(filename):
 	print("start train model")
 	model = linreg.fit(x,y)
 	print("train model end")
-	filePath = "E:\\tech_analysis\\py\\model\\linearModel.dat"
-	prefilePath = "E:\\tech_analysis\\py\\model\\linearModelPrediction.dat"
+	filePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/linearModel.dat"
+	prefilePath = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/linearModelPrediction.dat"
 	with open(filePath,'w') as w:
 		w.write(str(linreg.intercept_[0])+'\n')
 		for f in linreg.coef_[0]:
@@ -39,5 +39,5 @@ def prediction(linreg,x_test):
 	return y_pred
 
 if __name__ == '__main__':
-	filename = "E:\\tech_analysis\\py\\model\\preDataSet.dat"
+	filename = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/preDataSet.dat"
 	train(filename)

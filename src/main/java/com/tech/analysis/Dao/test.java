@@ -1,30 +1,101 @@
 package com.tech.analysis.Dao;
 
+import com.tech.analysis.entity.QueryEntity;
 import org.neo4j.cypher.internal.frontend.v2_3.ast.functions.Str;
 import org.neo4j.driver.v1.*;
-import org.python.core.Py;
-import org.python.core.PyFunction;
-import org.python.core.PyInteger;
-import org.python.core.PyObject;
-import org.python.util.PythonInterpreter;
+//import org.python.core.Py;
+//import org.python.core.PyFunction;
+//import org.python.core.PyInteger;
+//import org.python.core.PyObject;
+//import org.python.util.PythonInterpreter;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.lang.Thread;
 import java.util.*;
 
 import static org.neo4j.driver.v1.Values.parameters;
 
+import com.dataimport.entity.*;
+import com.dataimport.*;
+
 //import org
 public class test {
 
-    public static void main(String[] args){
-        String string = "卫星通信2011";
-        System.out.println(string.substring(0,string.length()-4));
+
+
+    public static void main(String[] args) throws Exception{
+        //论文的合著专家
+        HashMap<String,LinkedList<String>> expertCooperate = UtilRead.readExpertCooperateObject();
+        //企业下对应的专家
+        HashMap<String,LinkedList<String>> enterpriseAndExpert = UtilRead.readEnterpriseAndExpertObject();
+        //专家和所属企业
+        HashMap<String,String> name2Enterprise = UtilRead.readName2EnterpriseObject();
+        //论文的合作机构
+        HashMap<String,LinkedList<String>> paperInstitution = UtilRead.readPaperInstitutionObject();
+        GetEnterpriseAndExpertData getEnterpriseAndExpertData = new GetEnterpriseAndExpertData();
+        System.out.println("expertCooperate size: "+expertCooperate.size());
+        System.out.println("enterpriseAndExpert size: "+enterpriseAndExpert.size());
+        System.out.println("name2Enterprise size: "+name2Enterprise.size());
+        System.out.println("paperInstitution size: "+paperInstitution.size());
+        getEnterpriseAndExpertData.writeName2Enterprise(name2Enterprise, "E:\\tech_analysis_my\\tech_analysis\\py\\model","name2EnterpriseForImport");
+        getEnterpriseAndExpertData.writeEnterpriseAndExpert(enterpriseAndExpert, "E:\\tech_analysis_my\\tech_analysis\\py\\model","enterpriseAndExpertForImport");
+        getEnterpriseAndExpertData.writePaperInstitution(paperInstitution,"E:\\tech_analysis_my\\tech_analysis\\py\\model","paperInstitutionForImport");
+        getEnterpriseAndExpertData.writeExpertCooperate(expertCooperate, "E:\\tech_analysis_my\\tech_analysis\\py\\model","expertCooperateForImport");
+
+//        String str = "黄飞鸿，huanggeihong";
+//        str = str.replaceAll("[a-zA-Z]","" );
+//        System.out.println(str);
+////        com.dataimport.GenerateHashTable generateHashTable = new com.dataimport.GenerateHashTable();
+////        String file = "E:\\PycharmCode\\Test\\paper.dat";
+////        generateHashTable.generate(file);
+//        File dbPath = new File("E:\\PycharmCode\\Neo4j\\paperData");
+//        com.dataimport.EdgeAndNodeImport edgeAndNodeImport = new com.dataimport.EdgeAndNodeImport(dbPath);
+//        edgeAndNodeImport.ReadHash();
+//        edgeAndNodeImport.importNode();
+//        edgeAndNodeImport.importRelationship();
+//        edgeAndNodeImport.flushIndex();
+//        edgeAndNodeImport.shutDownIndex();
+//        edgeAndNodeImport.shutDownNeo4j();
+
+//        edgeAndNodeImport.ReadHash();
+//        edgeAndNodeImport.importNode();
+//        edgeAndNodeImport.importRelationship();
+//        edgeAndNodeImport.flushIndex();
+//        edgeAndNodeImport.shutDownIndex();
+//        edgeAndNodeImport.shutDownNeo4j();
+//        LoadWordAndVector loadWordAndVector = new LoadWordAndVector();
+//        loadWordAndVector.buildKeyDict();
+//        loadWordAndVector.buildModel();
+//        QueryEntity queryEntity = new QueryEntity();
+//        queryEntity.method();
+//        List<String> list = UtilRead.readQuery();
+//        System.out.println(list);
+//        String str = "asdagfg+\n";
+//        System.out.println(str.trim());
+//        System.out.println("kkkkkkk");
+//        String string = "hghgfjdjfghgl";
+//        if (string.contains("hg"))
+//            System.out.println("kkkkkkkkkk");
+//        test t = new test();
+//        t.test();
+//        System.out.println("gffhgfh");
+//        KeywordsPrediction keywordsPrediction = new KeywordsPrediction();
+//        keywordsPrediction.predict();
+
+//        HashMap<String, Long> yearKeywordTimes = new HashMap<String, Long>();
+//        yearKeywordTimes = UtilRead.readYearKeywordTimes();
+//        System.out.print(yearKeywordTimes.size());
+
+
+//        String string = "卫星通信2011";
+//        System.out.println(string.substring(0,string.length()-4));
 //        WordModel wordModel = new WordModel();
 //        System.out.println(wordModel.wordMap.size());
-//        List<String> list = wordModel.distance("卫星通信");
+////        List<String> list = wordModel.distance("卫星通信");
 ////        List<String> list = wordModel.distance("人工智能");
+//        List<String> list = wordModel.distance("机器学习");
 //        if (list != null){
 //            for (String string : list)
 //                System.out.println(string);
@@ -159,5 +230,35 @@ public class test {
 //        System.out.println("year: "+ 2011 + "总数： "+count);
 //        System.out.println("year: "+ 2011 + "bad总数： "+bad);
 //        System.out.println("year: "+ 2011 + "good总数： "+good);
+    }
+
+    public void test(){
+        try {
+            System.out.println("Starting .....");
+//            String[] parm = new String[] { "D:\\Python35\\python.exe",
+//                    "E:\\tech_analysis\\py\\model\\Line_Prediction.py"};
+//            String[] parm = new String[] { "/usr/bin/python3",
+//                    "/home/zhzy/Downloads/xcy/tech_analysis/py/model/t.py"};
+            String[] parm = new String[] { "/usr/neo4j3.1.0/bin/neo4j",
+                    "start"};
+//            String[] parm = new String[] { "rm",
+//                    "/home/zhzy/Downloads/xcy/tech_analysis/py/model/rm.txt"};
+//            String[] parm = new String[] { "unzip",
+//                    "-d", "/home/zhzy/Downloads/xcy/temp/", "/home/zhzy/Downloads/xcy/test.txt.zip"};
+
+            Process pr = Runtime.getRuntime().exec(parm);
+            pr.waitFor();
+            BufferedReader in = new BufferedReader(new
+                    InputStreamReader(pr.getInputStream()));
+            String line;
+            while ((line = in.readLine()) != null) {
+                System.out.println(line);
+            }
+            in.close();
+            pr.waitFor();
+            System.out.println("End .....");
+        }catch (Exception e){
+            System.out.println("调用LearnLinerModel训练模型失败！");
+        }
     }
 }
