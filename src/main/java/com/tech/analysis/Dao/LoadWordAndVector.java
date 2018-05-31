@@ -114,6 +114,7 @@ public class LoadWordAndVector {
 
     /**
      * 创建加载模型所需的Word2Vec文件
+     *
      */
     public void GetWordAndVexDoc(){
         try {

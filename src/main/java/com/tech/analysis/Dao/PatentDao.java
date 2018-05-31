@@ -1,7 +1,10 @@
 package com.tech.analysis.Dao;
 
+import com.hankcs.hanlp.HanLP;
 import com.tech.analysis.entity.AddressTemp;
 import com.tech.analysis.entity.PatentIdAndEnterpriseNames;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -22,7 +25,7 @@ public class PatentDao {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-
+    private Logger logger = LoggerFactory.getLogger("sgc");
     /**
      * @return 从patent数据表中抽出patentid,enterpriseNames对
      */
@@ -58,7 +61,7 @@ public class PatentDao {
     }
 
     public void putPatentToPatentForMatchTable(String patentId,String enterpriseName){
-        jdbcTemplate.update(String.format("INSERT INTO patentForMatchNew VALUES('%s','%s')",patentId,enterpriseName));
+        jdbcTemplate.update(String.format("INSERT INTO patentForMatch VALUES('%s','%s')",patentId,enterpriseName));
         //备份这个表，在撤销操作时方便操作
         jdbcTemplate.update(String.format("INSERT INTO patentForMatchBackup VALUES('%s','%s')",patentId,enterpriseName));
     }
@@ -89,11 +92,53 @@ public class PatentDao {
      * @param enterpriseName
      */
     public void updatePatentForMatch(String patentId,String enterpriseName){
-        jdbcTemplate.update(String.format("INSERT INTO patentForMatchNew VALUES('%s','%s')",patentId,enterpriseName));
+        jdbcTemplate.update(String.format("INSERT INTO patentForMatch VALUES('%s','%s')",patentId,enterpriseName));
     }
 
     public void deleteItemInPatent2Enterprise(String patentId,int companyId){
         jdbcTemplate.update(String.format("delete from patent2enterprise where patentid = '%s' and enterpriseid = %d",patentId,companyId));
+    }
+
+    public List<String> getidList(){
+        String sql = "select id from Patent where has_keywords = 0";
+        List<String> idList = jdbcTemplate.query(sql, new RowMapper<String>(){
+            @Override
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                String name = rs.getString("id");
+                return name;
+            }
+        });
+        return idList;
+    }
+
+    public void updatePatentKeywordsByid(String id){
+        String sql = String.format("select abstract_cn from Patent where id = '%s'", id);
+
+        try{
+            List<String> abstractList = jdbcTemplate.query(sql, new RowMapper<String>(){
+                @Override
+                public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getString("abstract_cn");
+                }
+            });
+            String text = abstractList.get(0);
+            if(text == null){
+                jdbcTemplate.update(String.format("update Patent set has_keywords = 1 where id = '%s'",id));
+                return;
+            }
+            List<String> phraseList = HanLP.extractPhrase(text, 8);
+            String keywords = "";
+            for (String phrase : phraseList) {
+                keywords = keywords + phrase + " ";
+            }
+            keywords = keywords.trim();
+            jdbcTemplate.update(String.format("update Patent set keywords = '%s',has_keywords = 1 where id = '%s'",keywords,id));
+        }catch(Exception e){
+            logger.error(e.toString());
+            return;
+        }finally {
+
+        }
     }
 }
 

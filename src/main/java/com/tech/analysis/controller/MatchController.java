@@ -1,6 +1,7 @@
 package com.tech.analysis.controller;
 
 import com.tech.analysis.entity.Enterprise;
+import com.tech.analysis.service.GetKeyphraseSevice;
 import com.tech.analysis.service.MatchService;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 
 /**
@@ -26,6 +28,8 @@ public class MatchController {
 
     @Autowired
     private MatchService matchService;
+    @Autowired
+    private GetKeyphraseSevice getKeyphraseSevice;
 //    @RequestMapping("/getEnterprise")
 //    public List<Enterprise> getEnterprise(@RequestBody Map<String,Object> map){
 //        String source = (String) map.get("source");//数据来源
@@ -35,6 +39,7 @@ public class MatchController {
 //        }
 //        return  list;
 //    }
+
 
     @RequestMapping("/testLog") //提供路由信息，”/“路径的HTTP Request都会被映射到sayHello方法进行处理。
     public String sayHello(){
@@ -112,4 +117,13 @@ public class MatchController {
         return "success";
     }
 
+    @RequestMapping("/updateKeywords")
+    public String updateKeywords(){
+        getKeyphraseSevice.updateKeyphraseForPaper();
+        getKeyphraseSevice.updateKeyphraseForPatent();
+        getKeyphraseSevice.updateKeyphraseForProject();
+        getKeyphraseSevice.getKeyphraseForExpert();
+        getKeyphraseSevice.getKeyphraseForEnterprise();
+        return "success";
+    }
 }

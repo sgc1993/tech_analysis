@@ -25,14 +25,27 @@ public class MatchDao {
         Date now = new Date();
         DateFormat df = DateFormat.getDateInstance();
         String nowTime = df.format(now);
-        jdbcTemplate.update(String.format("insert into MatchRecord values(%d,'%s','%s','%s')",companyId,aliasName,source,nowTime));
+        try{
+            jdbcTemplate.update(String.format("insert into MatchRecord values(%d,'%s','%s','%s')",companyId,aliasName,source,nowTime));
+        }catch(Exception e){}finally {
+
+        }
+
     }
 
     public void deleteItemByCompanyIdAndAliasname(String table,int companyid,String aliasName){
-        jdbcTemplate.update(String.format("delete from %s where companyid = %d and aliasName = '%s'",table,companyid,aliasName));
+        try{
+            jdbcTemplate.update(String.format("delete from %s where companyid = %d and aliasName = '%s'",table,companyid,aliasName));
+        }catch(Exception e){}finally {
+
+        }
     }
 
     public void updateCompanyAlias(int companyId,String aliasName){
-        jdbcTemplate.update(String.format("INSERT INTO CompanyAlias VALUES(%d,'%s')",companyId,aliasName));
+        try{
+            jdbcTemplate.update(String.format("INSERT INTO CompanyAlias VALUES(%d,'%s')",companyId,aliasName));
+        }catch(Exception e){}finally {
+
+        }
     }
 }

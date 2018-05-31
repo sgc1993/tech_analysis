@@ -31,6 +31,7 @@ public class CreatGraphAboutYear {
             ans.add(tempCommunity);
         }
 //        HashMap<String,ArrayList<Integer>> data = keywordsDao.getData("");
+
 //        String str =keywordsDao.formatJsonString(keywordsDao.getCommunity(data));
         return ans;
     }

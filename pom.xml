@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<groupId>com.tech.analysis</groupId>
 	<artifactId>tech_analysis</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -52,26 +51,30 @@
 			<version>4.3.5.RELEASE</version>
 		</dependency>
 		<dependency>
-			<groupId>org.neo4j</groupId>
-			<artifactId>neo4j</artifactId>
-			<version>3.1.0-M03</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
+			<scope>true</scope>
 		</dependency>
-
+		<!-- 跳转 -->
 		<dependency>
-			<groupId>org.neo4j</groupId>
-			<artifactId>neo4j-kernel</artifactId>
-			<version>3.1.0-M03</version>
-		</dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency><!-- 跳转 -->
 		<!--<dependency>-->
-		<!--<groupId>org.neo4j</groupId>-->
-		<!--<artifactId>neo4j-kernel</artifactId>-->
-		<!--<version>3.1.0-M03</version>-->
+			<!--<groupId>log4j</groupId>-->
+			<!--<artifactId>log4j</artifactId>-->
 		<!--</dependency>-->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-compress</artifactId>
-			<version>1.10</version>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j</artifactId>
+        </dependency>
+        <!--导入可返回json数据-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.30</version>
+        </dependency>
 		<dependency>
 			<groupId>org.neo4j.driver</groupId>
 			<artifactId>neo4j-java-driver</artifactId>
@@ -83,19 +86,10 @@
 			<version>20151123</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>springloaded</artifactId>
+			<groupId>com.hankcs</groupId>
+			<artifactId>hanlp</artifactId>
+			<version>portable-1.6.3</version>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>provided</scope>
-			<optional>true</optional>
-		</dependency>
-
-
-
-
 	</dependencies>
 
 	<build>
@@ -103,31 +97,6 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.17</version>
-				<configuration>
-					<forkCount>3</forkCount>
-					<reuseForks>true</reuseForks>
-					<argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
-					<systemPropertyVariables>
-					</systemPropertyVariables>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<encoding>UTF-8</encoding>
-					<showWarnings>true</showWarnings>
-					<verbose>true</verbose>
-				</configuration>
-
 			</plugin>
 		</plugins>
 	</build>
