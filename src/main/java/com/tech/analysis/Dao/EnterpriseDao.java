@@ -235,4 +235,21 @@ public class EnterpriseDao {
         });
         return enterpriseWithExpert;
     }
+
+    public void insertNewEnterprise(String name){
+        String sql = String.format("insert into EnterpriseInfo (name,enterprisetype) values ('%s',1)",name);
+        jdbcTemplate.update(sql);
+    }
+
+    public int getEnterpriseIdByName(String name){
+        String sql = String.format("select id from EnterpriseInfo where name = '%s'",name);
+        List<Integer> list = jdbcTemplate.query(sql, new RowMapper<Integer>() {
+            @Override
+            public Integer mapRow(ResultSet resultSet, int i) throws SQLException {
+                Integer a = resultSet.getInt("id");
+                return a;
+            }
+        });
+        return list.get(0);
+    }
 }

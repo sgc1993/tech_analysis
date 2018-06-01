@@ -1,5 +1,6 @@
 package com.tech.analysis.Dao;
 
+import com.tech.analysis.entity.Expert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -78,4 +79,68 @@ public class ExpertDao {
         String sql = String.format("Select id from Expert where name = '%s' and enterpriseName = '%s'",name,enterpriseName);
         return (String) jdbcTemplate.queryForObject(sql,String.class);
     }
+
+    public List<Expert> getExpertList(){
+        String sql = "select distinct name,enterprisename,enterpriseid from Expert a inner join Expert2Enterprise b on a.id = b.expertid";
+        List<Expert> list = new ArrayList<>();
+        list = jdbcTemplate.query(sql, new RowMapper<Expert>() {
+            @Override
+            public Expert mapRow(ResultSet rs, int i) throws SQLException {
+                Expert e = new Expert();
+                e.setName(rs.getString("name"));
+                e.setEnterpriseName(rs.getString("enterprisename"));
+                e.setEnterpriseId(rs.getString("enterpriseid"));
+                return e;
+            }
+        });
+        return list;
+    }
+
+    /**
+     * @param newExpertList 将新的论文中的作者插入专家，并对到expert2enterprise中
+     */
+    public void insertNewExpert(List<Expert> newExpertList){
+        String sql = "insert into Expert (name,isdeath,enterprisename) values";
+        int time = 0;
+        for (Expert e : newExpertList) {
+//            if(time < 999){
+//                time++;
+//                sql +=  String.format("('%s',0,'%s'),",e.getName().replace("'","''"),e.getEnterpriseName().replace("'","''"));
+//            }else{
+//                sql +=  String.format("('%s',0,'%s'),",e.getName().replace("'","''"),e.getEnterpriseName().replace("'","''"));
+//                sql = sql.substring(0,sql.length()-1);
+//                try{//为专家表添加唯一索引，防止插入重复专家
+//                    jdbcTemplate.update(sql);
+//                }catch(Exception exc){
+//                    System.out.println(exc);
+//                }
+//                time = 0;
+//                sql = "insert into Expert (name,isdeath,enterprisename) values";
+//            }
+            try{//为专家表添加唯一索引，防止插入重复专家
+                    jdbcTemplate.update(sql+String.format("('%s',0,'%s')",e.getName().replace("'","''"),e.getEnterpriseName().replace("'","''")));
+            }catch(Exception exc){
+                    System.out.println(exc);
+            }
+
+        }
+        if(time > 0){
+            sql = sql.substring(0,sql.length()-1);
+            jdbcTemplate.update(sql);
+        }
+        for (Expert e : newExpertList) {
+            sql = String.format("select id from Expert where name = '%s' and enterprisename = '%s'",e.getName().replace("'","''"),e.getEnterpriseName().replace("'","''"));
+            //可能出现重复的，就报错了
+            try{
+                String id = jdbcTemplate.queryForObject(sql,String.class);
+                sql = String.format("insert into expert2enterprise (expertid,enterpriseid) values ('%s','%s')",id,e.getEnterpriseId());
+                jdbcTemplate.update(sql);
+            }catch(Exception ex){
+                System.out.println("+++++++++++++++++++++插入错误专家+++++++++++++++++++++++");
+                System.out.println(e.toString());
+            }
+
+        }
+    }
+
 }

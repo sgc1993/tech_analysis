@@ -121,7 +121,21 @@ public class MatchController {
     public String updateKeywords(){
         getKeyphraseSevice.updateKeyphraseForPaper();
         getKeyphraseSevice.updateKeyphraseForPatent();
-        getKeyphraseSevice.updateKeyphraseForProject();
+        //getKeyphraseSevice.updateKeyphraseForProject();
+
+        return "success";
+    }
+
+    @RequestMapping("/prizeForMatch")
+    public void i(){
+        matchService.getPrizeForMatch();
+    }
+
+    @RequestMapping("/ttt")
+    public String ttt(){
+        matchService.whenDataUpdate();
+
+        updateKeywords();
         getKeyphraseSevice.getKeyphraseForExpert();
         getKeyphraseSevice.getKeyphraseForEnterprise();
         return "success";

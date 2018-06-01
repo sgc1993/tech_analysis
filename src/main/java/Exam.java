@@ -1,8 +1,12 @@
 import com.hankcs.hanlp.HanLP;
+import com.tech.analysis.entity.Expert;
+import com.tech.analysis.util.MatchUtil;
 import org.json.JSONObject;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.pow;
 import static java.lang.Thread.sleep;
@@ -380,7 +384,40 @@ public class Exam {
 //            iterator.remove();
 //        }
 //
-        String a = "eee";
+//        try{
+//            while (true){
+//                System.out.print("?");
+//            }
+//        }catch(Exception e){
+//
+//        }finally{
+//            System.out.println("I can get there!!!!!!!!!!!!!!!!!!!!!!!!");
+//        }
+//        Pattern p = Pattern.compile("\\d+");
+//        Matcher m = p.matcher("Analog IC Design Department, 24th Research Institute of China Electronics Technology Group Corporation");
+//        if (m.find()) {
+//            System.out.println(m.group(0));
+//        }
+        String sql = "";
+        String authors = "郭东明(大连理工大学)，贾振元(大连理工大学)，康仁科(大连理工大学)，王永青(大连理工大学)，盛贤君(大连理工大学)，余慧龙(航天科工集团二院25所)";
+        String[] author = authors.split("，");
+        for (String a : author) {
+            System.out.println(a);
+            String[] authorAndEnterprise = a.split("\\(");
+            sql += String.format("('%s','%s'),",authorAndEnterprise[0],authorAndEnterprise[1].substring(0,authorAndEnterprise[1].length()-1));
+        }
+        System.out.print(sql);
+        String a = "eEe";
+        String b = "EeE";
+        Expert e1 = new Expert();
+        e1.setEnterpriseId("1");
+        e1.setEnterpriseName("The");
+        e1.setName("wo");
+        Expert e2 = new Expert();
+        e2.setEnterpriseId("1");
+        e2.setEnterpriseName("The");
+        e2.setName("wo");
+        System.out.println(a.toLowerCase().equals(b.toLowerCase()));
         System.out.println(String.format("%%%s%%",a));
         System.out.println("十三香挥发油, GC-MS分析, 自动质谱解卷积定性系统, 色谱保留指数".split(",")[3]);
         System.out.println(HanLP.extractKeyword("为防御椭圆曲线密码系统的侧信道攻击,针对椭圆曲线密码系统的侧信道攻击主要集中在对标量乘运算的攻击,提出了基于Width-wNAF的改进算法RWNAF(refinedWidth-wNAF)和FWNAF(fractionalWidth-wNAF),通过Masking技术隐藏密码算法的真实能量消耗信息,能有效地防御SPA、DPA、RPA与ZPA攻击;通过对密钥d的奇偶性分析,对预计算表进行优化,减少了存储需求和计算开销。FWNAF进一步利用碎片窗口技术,提高了存储资源的利用效率,同时也减少了由于系统资源急剧变化而引发的系统计算性能的抖动现象。",6));

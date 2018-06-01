@@ -48,4 +48,15 @@ public class MatchDao {
 
         }
     }
+
+    /**
+     * 将AddressTemp中的剩余的新机构插入对应CompanyAlias中
+     */
+    public void insertNewCompanyAlias(){
+        try{
+            String sql = "insert into CompanyAlias (aliasname,companyid) select distinct name,a.id from EnterpriseInfo a inner join AddressTemp b on a.name = b.organization";
+            jdbcTemplate.update(sql);
+        }catch(Exception e){}
+
+    }
 }
