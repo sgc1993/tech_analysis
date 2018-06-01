@@ -1,5 +1,8 @@
 package com.tech.analysis.entity;
+import org.neo4j.graphdb.RelationshipType;
+
 import java.io.Serializable;
+
 /**
  * Created by XCY on 2018/3/26.
  */
@@ -8,15 +11,30 @@ public class RelationshipEntity implements Serializable {
     private Long source;
     private Long target;
     private Long times;
-    private String type;
+    private RelationshipTypes type;
+    private String stringType;
 
-    public RelationshipEntity(Long source, Long target, Long times, String type) {
+    public RelationshipEntity(Long source, Long target, String stringType) {
+        this.source = source;
+        this.target = target;
+        this.stringType = stringType;
+    }
+    public RelationshipEntity(Long source, Long target, Long times, String stringType) {
+        this.source = source;
+        this.target = target;
+        this.times = times;
+        this.stringType = stringType;
+    }
+    public RelationshipEntity(Long source, Long target, Long times, RelationshipTypes type) {
         this.source = source;
         this.target = target;
         this.times = times;
         this.type = type;
     }
 
+    public String getStringType(){
+        return stringType;
+    }
     public Long getSource() {
         return source;
     }
@@ -41,11 +59,11 @@ public class RelationshipEntity implements Serializable {
         this.times = times;
     }
 
-    public String getType() {
+    public RelationshipTypes getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(RelationshipTypes type) {
         this.type = type;
     }
 }

@@ -25,11 +25,14 @@ def writeDict(sourceFile,targetFile):
 			w.write(key + " " + str(200) + '\n')
 
 def getDict():
-	sourceFile = "E:\\tech_analysis\\py\\model\\paper.dat"
-	targetFile = "E:\\tech_analysis\\py\\model\\keyDict.dat"
+	sourceFile = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/keywordsForDict.dat"
+	targetFile = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/keyDict.dat"
 	writeDict(sourceFile=sourceFile, targetFile=targetFile)
+	print("successfully build keyword dictionary")
 if __name__ == "__main__":
+    print("start building keyword dictionary")
 	getDict()
+
 
 
 

@@ -2,11 +2,13 @@ package com.tech.analysis.Dao;
 
 import java.util.*;
 
-import com.tech.analysis.entity.WordEntry;
+import com.tech.analysis.entity.WordEntity;
+import org.springframework.stereotype.Repository;
 
 /**
  * Created by XCY on 2018/4/18.
  */
+@Repository
 public class WordModel {
     /**
      *
@@ -32,13 +34,13 @@ public class WordModel {
 //        System.out.println(queryWord);
         List<String> ans = new ArrayList<>();
         double[] center = wordMap.get(queryWord);
-        System.out.println(center.length);
+//        System.out.println(center.length);
         if (center == null) {
-            return null;
+            return ans;
         }
 
         int resultSize = wordMap.size() < topNSize ? wordMap.size() : topNSize;
-        TreeSet<WordEntry> result = new TreeSet<WordEntry>();
+        TreeSet<WordEntity> result = new TreeSet<WordEntity>();
 
         double min = Float.MIN_VALUE;
         for (Map.Entry<String, double[]> entry : wordMap.entrySet()) {
@@ -47,7 +49,7 @@ public class WordModel {
             for (int i = 0; i < vector.length; i++) {
                 dist += center[i] * vector[i];
             }
-            result.add(new WordEntry(entry.getKey(), dist));
+            result.add(new WordEntity(entry.getKey(), dist));
                 if (resultSize < result.size()) {
                     result.pollLast();
                 }
@@ -62,7 +64,7 @@ public class WordModel {
         }
         result.pollFirst();
 
-        for (WordEntry wordEntry : result){
+        for (WordEntity wordEntry : result){
             ans.add(wordEntry.name);
 //            System.out.println(wordEntry.name);
         }

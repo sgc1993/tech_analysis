@@ -1,5 +1,6 @@
 package com.tech.analysis.Dao;
 
+import com.tech.analysis.entity.KeywordEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -26,10 +27,10 @@ public class LoadWordAndVector {
      */
     public void buildModel(){
         try {
-            getOriginalData();
-            GetWordAndVexDoc();
+//            getOriginalData();
+//            GetWordAndVexDoc();
             creatModel();
-        }catch (IOException e){
+        }catch (Exception e){
             System.out.println("Ori文件写入错误！");
         }
 
@@ -40,10 +41,11 @@ public class LoadWordAndVector {
      */
 
     public void getOriginalData() throws IOException{
-        BufferedWriter out = new BufferedWriter(new FileWriter("E:\\tech_analysis\\py\\model\\OriginalData.dat"));;
+        BufferedWriter out = new BufferedWriter(new FileWriter("/home/zhzy/Downloads/xcy/tech_analysis/py/model/OriginalData.dat"));;
         try {
-            String sql = "select abstract_text_cn,title_cn from Paper ";
-
+//            String sql = "select abstract_text_cn,title_cn from Paper ";
+            String sql = "select abstract_text_cn,title_cn from Papertest ";
+            int count = 0;
             List<String> dataList = jdbcTemplate.query(sql, new RowMapper<String>(){
                 @Override
                 public String mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -51,29 +53,32 @@ public class LoadWordAndVector {
                     String title_text =  rs.getString("title_cn");
                     if (abstract_text == null && title_text == null)
                         return null;
-                    System.out.println(abstract_text+title_text);
+//                    System.out.println(abstract_text+title_text);
 
                     return title_text+abstract_text;
                 }
             });
+            System.out.println(dataList.size());
             int goodCount = 0;
             int badCount = 0;
             if (dataList != null){
                 for (String string : dataList){
-                    if (string == null){
+                    if (string.length() < 300){
                         ++badCount;
                         continue;
                     }
                     ++goodCount;
                     out.write(string);
-                out.newLine();
-                out.flush();
+                    out.newLine();
                 }
+                out.flush();
             }
+            dataList.clear();
             System.out.println("goodCount: "+goodCount);
             System.out.println("badCount: "+badCount);
+            System.out.println("写入OriginalData.dat成功");
         }catch (Exception e){
-            System.out.println("写入文件失败");
+            System.out.println("写入OriginalData.dat");
 //            out.close();
         }finally {
             out.close();
@@ -82,14 +87,41 @@ public class LoadWordAndVector {
     }
 
     /**
+     * 构建jieba分词所用的前置字典，根据数据集构建
+     */
+    public void buildKeyDict(){
+        HashMap<String, KeywordEntity> keywords = UtilRead.readKeywords();
+        HashMap<String, Long> keywordTimes = UtilRead.readKeywordTimes();
+
+        int count = 0;
+        String filename = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/keyDict.dat";
+        File file = new File(filename);
+        try {
+            Writer write = new OutputStreamWriter(new FileOutputStream(file), "UTF-8");
+            for (String string : keywords.keySet()){
+                write.write(string+" "+(200+keywordTimes.get(string))+"\n");
+                ++count;
+            }
+            write.flush();
+            write.close();
+            System.out.println(count);
+            System.out.println("构建自己的前置字典keyDict.dat成功");
+        }catch (Exception e){
+            System.out.println("构建自己的前置字典keyDict.dat失败");
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 创建加载模型所需的Word2Vec文件
      *
      */
     public void GetWordAndVexDoc(){
         try {
-            System.out.println("Starting.....");
-            String[] parm = new String[] { "D:\\Python35\\python.exe",
-                    "E:\\tech_analysis\\py\\model\\Word2VectorBasedGensim.py"};
+//            buildKeyDict();
+            System.out.println("Starting execute python word2vec model");
+            String[] parm = new String[] { "/usr/bin/python3",
+                    "/home/zhzy/Downloads/xcy/tech_analysis/py/model/Word2VectorBasedGensim.py"};
 
             Process pr = Runtime.getRuntime().exec(parm);
             pr.waitFor();
@@ -101,7 +133,7 @@ public class LoadWordAndVector {
             }
             in.close();
             pr.waitFor();
-            System.out.println("End python，word2vector训练完毕");
+            System.out.println("End python word2vector训练完毕");
         }catch (Exception e){
             System.out.println("调用GetWordAndVexDoc训练模型失败！");
         }
@@ -111,7 +143,7 @@ public class LoadWordAndVector {
      */
     public void creatModel(){
 //        String filename = "E:\\tech_analysis\\py\\model\\Word2Vec.dat"; //词和向量存储的文件位置
-        String filename = "Word2Vec.dat"; //词和向量存储的文件位置
+        String filename = "/home/zhzy/Downloads/xcy/tech_analysis/py/model/Word2Vec.dat"; //词和向量存储的文件位置
         BufferedReader in;
         HashMap<String, double[]> wordMap = new HashMap<String, double[]>();
         int i = 0;
@@ -132,8 +164,9 @@ public class LoadWordAndVector {
             System.out.println(i);
             System.out.println(wordMap.size());
             UtilWrite.WriteModel(wordMap);
+            System.out.println("构建词和向量的对象成功！");
         }catch (Exception e){
-            System.out.println("读取词和向量文件失败！");
+            System.out.println("构建词和向量的对象成功");
         }
     }
 

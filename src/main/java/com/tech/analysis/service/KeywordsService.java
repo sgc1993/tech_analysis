@@ -1,4 +1,5 @@
 package com.tech.analysis.service;
+import com.tech.analysis.Dao.GetCommunity;
 import com.tech.analysis.Dao.KeywordsDao;
 import com.tech.analysis.Dao.LoadWordAndVector;
 import com.tech.analysis.Dao.CreatGraphAboutYear;
@@ -14,7 +15,7 @@ import java.util.List;
 
 public class KeywordsService {
     @Autowired
-    private KeywordsDao keywordsDao;
+    private GetCommunity getCommunity;
 
     @Autowired
     private CreatGraphAboutYear creatGraphAboutYear;
@@ -23,7 +24,7 @@ public class KeywordsService {
      * @return 查找到的json字符串
      */
     public String getTargetDependKeywords(String target){
-        return keywordsDao.getJsonString(target);
+        return getCommunity.getJsonStringCommunity(target);
     }
 
     /**

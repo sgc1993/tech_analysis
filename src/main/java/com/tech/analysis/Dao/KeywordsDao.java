@@ -15,13 +15,12 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class KeywordsDao {
-    private static HashMap<String, Long> keywordTimes = UtilRead.readKeywordTimes();
+//    private static HashMap<String, Long> keywordTimes = UtilRead.readKeywordTimes();
 //    static {
 //        HashMap<String, Long> keywordTimes = UtilRead.readKeywordTimes();
 //    }
     /**
      * @param query 给定目标词
-     *
      * @return 目标词社区的字符串
      */
     public String getJsonString(String query){
@@ -54,6 +53,8 @@ public class KeywordsDao {
 //        }
 //    }
     /**
+     * CALL apoc.algo.community(50,['newKeywordKey'],'partitionKey','similarKey','OUTGOING','x',10000)
+     * CALL apoc.algo.community(50,['newKeywordKey'],'partitionKey1','similarKey','OUTGOING','partitionKey',10000)
      * 根据传入的参数划分关键字社区
      * CALL apoc.algo.community(25,['newKeyword'],'partitionKey','similar','OUTGOING','times',10000)
      * CALL apoc.algo.community(25,['newKeyword'],'partitionKey1','similar','OUTGOING','partitionKey',10000)
@@ -82,6 +83,14 @@ public class KeywordsDao {
         connect.closeConnect();
     }
 
+//    /**
+//     * 新方法 用于返回社区结构图
+//     * @return
+//     */
+//    public HashMap<String,ArrayList<String>> getCommubityData(){
+//        HashMap<String,ArrayList<String>> data = new HashMap<String,ArrayList<String>>();
+//
+//    }
     /**
      * 返回 与该字符串处于同一级社区和下一级社区的节点
      * @param query 精确匹配的字符串
@@ -95,26 +104,32 @@ public class KeywordsDao {
         System.out.println(query.length());
         if (query.equals("\"\"")){
             result = connect.excute(
-                    "MATCH (n:newKeyword) RETURN n.name AS name," +
+//                    "MATCH (n:newKeyword) RETURN n.name AS name," +
+                    "MATCH (n:newKeywordKey) RETURN n.name AS name," +
                             "n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
         }else {
             System.out.println("else: "+ query);
             StatementResult result1 = connect.excute(
-                    "MATCH (n:newKeyword) WHERE n.name = \"" + query +
+//                    "MATCH (n:newKeyword) WHERE n.name = \"" + query +
+                    "MATCH (n:newKeywordKey) WHERE n.name = \"" + query +
                             "\" return n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
             int firstCommunityNum = -1;
             try {
+                System.out.println(result1.hasNext());
                 Record recordFirst = result1.next();
                 firstCommunityNum = recordFirst.get("partitionKey").asInt();
+//                System.out.println("//////////////////////////////////////"+firstCommunityNum);
             }catch (Exception e){
                 System.out.println("获取节点所属第一社区失败!!!" + e);
                 return null;
             }
-            result = connect.excute(
-                    "MATCH (n:newKeyword) WHERE n.partitionKey = "+ firstCommunityNum +
-                            " return n.name AS name,n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
+            result = connect.excute("MATCH (n:newKeywordKey) WHERE n.partitionKey =454662 " +
+                            "return n.name AS name,n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1,n.times AS times",
+//                    "MATCH (n:newKeyword) WHERE n.partitionKey = "+ firstCommunityNum +
+//                    "MATCH (n:newKeywordKey) WHERE n.partitionKey = "+ firstCommunityNum +
+//                            " return n.times AS times,n.name AS name,n.partitionKey AS partitionKey,n.partitionKey1 AS partitionKey1",
                     parameters( "", "" ));//获取结果集
         }
         int count = 0;
@@ -128,18 +143,25 @@ public class KeywordsDao {
 //            System.out.println("partitionKey: " + record.get("partitionKey") + " " +
 //                    "partitionKey1: " + record.get("partitionKey1"));
             try {
-                ++keyCount;
-                if (keyCount > 200)
+                if (keyCount > 200) {
                     break;
+                }
+                int times = Integer.parseInt(record.get("times").asString());
+//                System.out.println(times);
+                if (times < 900) {
+                    continue;
+                }
+//                ++keyCount;
                 ArrayList<Integer> templist = new ArrayList<Integer>();
                 templist.add(record.get("partitionKey").asInt());
                 templist.add(record.get("partitionKey1").asInt());
-                if (keywordTimes.get(record.get( "name" ).asString()) < 3)
-                    continue;
-                System.out.println(record.get( "name" ).asString()+"  "+ keywordTimes.get(record.get( "name" ).asString()));
+//                if (keywordTimes.get(record.get( "name" ).asString()) < 3)
+//                    continue;
+//                System.out.println(record.get( "name" ).asString()+"  "+ keywordTimes.get(record.get( "name" ).asString()));
                 data.put(record.get( "name" ).asString(),templist);
                 ++good;
             }catch (Exception e){
+                e.printStackTrace();
                 ++bad;
                 continue;
             }
