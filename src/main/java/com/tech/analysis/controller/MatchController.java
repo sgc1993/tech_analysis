@@ -125,7 +125,7 @@ public class MatchController {
 
         return "success";
     }
-    //c
+    //cc
     @RequestMapping("/prizeForMatch")
     public void i(){
         matchService.getPrizeForMatch();
