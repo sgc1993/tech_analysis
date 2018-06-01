@@ -66,7 +66,7 @@ public class GetKeyphraseSevice {
         for (String expertId : expertIdList) {
             List<String> keywordsList = expertDao.getKeywordByExpertId("paper",expertId);
             keywordsList.addAll(expertDao.getKeywordByExpertId("patent",expertId));
-            keywordsList.addAll(expertDao.getKeywordByExpertId("project",expertId));
+            //keywordsList.addAll(expertDao.getKeywordByExpertId("project",expertId));
             JSONObject obj = convertUtil.getKeywordJsonByStringList(keywordsList);
             expertDao.putKeywordByExpertId(expertId,obj.toString());
         }

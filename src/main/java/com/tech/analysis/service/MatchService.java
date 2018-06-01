@@ -478,8 +478,10 @@ public class MatchService {
     //总的更新口
     @Transactional
     public void whenDataUpdate(){
+        getPrizeForMatch();
         preMatchPrize();
         postMatchPrize();
+        getPatentForMatchToTable();
         preMatchPatent();
         postMatchPatent();
         preMatchPaper();
